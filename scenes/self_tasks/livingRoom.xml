@@ -1,0 +1,372 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+	<default name="spp" value="32"/>
+	<default name="resx" value="1920"/>
+	<default name="resy" value="1080"/>
+
+<!-- Camera and Rendering Parameters -->
+	<medium type="homogeneous" id="medium">
+		<rgb name="sigmaA" value="0.01 0.01 0.01"/>
+		<rgb name="sigmaS" value="0.03 0.03 0.03"/>
+		<float name="scale" value="1"/>
+
+<!-- 		<phase type="hg">
+			<float name="g" value="0.5"/>
+		</phase> -->
+	</medium>
+
+	<integrator type="path_f">
+		<integer name="maxDepth" value="-1"/>
+		<integer name="version" value="6"/>
+	</integrator>
+
+	<sensor type="perspective" id="Camera">
+		<string name="fov_axis" value="x"/>
+		<float name="fov" value="78.578813"/>
+		<float name="principal_point_offset_x" value="0.000000"/>
+		<float name="principal_point_offset_y" value="-0.000000"/>
+		<float name="near_clip" value="0.100000"/>
+		<float name="far_clip" value="100.000000"/>
+		<transform name="to_world">
+			<rotate x="1" angle="-153.55930454308313"/>
+			<rotate y="1" angle="-14.368368428632344"/>
+			<rotate z="1" angle="-179.999991348578"/>
+			<translate value="3.478585 4.958309 6.925791"/>
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp"/>
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx"/>
+			<integer name="height" value="$resy"/>
+		</film>
+		<ref id="medium"/>
+	</sensor>
+
+<!-- Materials -->
+
+	<bsdf type="twosided" id="mat-breakfast_room:Paint___White_Matt">
+		<bsdf type="principled">
+			<rgb value="0.900000 0.900000 0.900000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.968377"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Ceramic_001">
+		<bsdf type="principled">
+			<rgb value="0.500000 0.500000 0.500000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.865836"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Material_002">
+		<bsdf type="principled">
+			<rgb value="0.500000 0.500000 0.500000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.865836"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Chrome">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.683772"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.800000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Paint___Black_Satin">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.858579"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:White_Plastic">
+		<bsdf type="principled">
+			<rgb value="1.000000 1.000000 1.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Black_Rubber">
+		<bsdf type="principled">
+			<rgb value="0.640000 0.640000 0.640000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.690032"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Gold_Paint">
+		<bsdf type="principled">
+			<rgb value="0.200000 0.100000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.400000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Ceramic">
+		<bsdf type="principled">
+			<rgb value="1.000000 1.000000 1.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.683772"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Frosted_Glass">
+		<bsdf type="principled">
+			<rgb value="0.900000 0.080000 0.010000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.858579"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.040000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Paint___White_Gloss">
+		<bsdf type="principled">
+			<rgb value="1.000000 1.000000 1.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.929289"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Material_005.001">
+		<bsdf type="principled">
+			<rgb value="0.800000 0.800000 0.800000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.500000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:White_Marble">
+		<bsdf type="principled">
+			<rgb value="0.700000 0.700000 0.700000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-breakfast_room:Artwork">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/picture3.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="1.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.968377"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+
+<!-- Emitters -->
+
+
+	<shape type="rectangle" id="emit-Area">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.500000 0.000000 0.000000 1.476050 0.000000 0.000000 0.500000 3.728409 0.000000 -0.500000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="20.424999 20.424999 20.424999" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+
+	<!-- <emitter type="envmap" id="Area_002-light">
+		<string name="filename" value="../matpreview/envmap.exr"/>
+		<transform name="toWorld">
+			<rotate y="1" angle="-180"/>
+			<matrix value="-0.224951 -0.000001 -0.974370 0.000000 -0.974370 0.000000 0.224951 0.000000 0.000000 1.000000 -0.000001 8.870000 0.000000 0.000000 0.000000 1.000000 "/>
+		</transform>
+		<float name="scale" value="3"/>
+	</emitter> -->
+
+<!-- Shapes -->
+
+	<shape type="ply" id="mesh-Blinds_breakfast_room">
+		<string name="filename" value="meshes/Blinds_breakfast_room.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Wall_West">
+		<string name="filename" value="meshes/breakfast_room_Wall_West.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Wall_South">
+		<string name="filename" value="meshes/breakfast_room_Wall_South.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Wall_East">
+		<string name="filename" value="meshes/breakfast_room_Wall_East.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Wall_North">
+		<string name="filename" value="meshes/breakfast_room_Wall_North.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Floor">
+		<string name="filename" value="meshes/breakfast_room_Floor.ply"/>
+		<ref id="mat-breakfast_room:Ceramic_001" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-breakfast_room_Ceiling">
+		<string name="filename" value="meshes/breakfast_room_Ceiling.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Matt" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plates_top_material_breakfast_room_Interior_001">
+		<string name="filename" value="meshes/Plates_top_material_breakfast_room_Interior_001.ply"/>
+		<ref id="mat-breakfast_room:Material_002" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Chair_Legs_breakfast_room_Interior_002">
+		<string name="filename" value="meshes/Chair_Legs_breakfast_room_Interior_002.ply"/>
+		<ref id="mat-breakfast_room:Chrome" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Table_Legs_breakfast_room_Interior_003">
+		<string name="filename" value="meshes/Table_Legs_breakfast_room_Interior_003.ply"/>
+		<ref id="mat-breakfast_room:Paint___Black_Satin" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Chair_seats_and_light_fixture_breakfast_room_Interior_004">
+		<string name="filename" value="meshes/Chair_seats_and_light_fixture_breakfast_room_Interior_004.ply"/>
+		<ref id="mat-breakfast_room:White_Plastic" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Chair_feet_breakfast_room_Interior_005">
+		<string name="filename" value="meshes/Chair_feet_breakfast_room_Interior_005.ply"/>
+		<ref id="mat-breakfast_room:Black_Rubber" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Tea_set_metal_rim_breakfast_room_Interior_008">
+		<string name="filename" value="meshes/Tea_set_metal_rim_breakfast_room_Interior_008.ply"/>
+		<ref id="mat-breakfast_room:Gold_Paint" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Teapot_and_Water_Pitcher_breakfast_room_Interior_009">
+		<string name="filename" value="meshes/Teapot_and_Water_Pitcher_breakfast_room_Interior_009.ply"/>
+		<ref id="mat-breakfast_room:Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Light_shades_breakfast_room_Interior_010">
+		<string name="filename" value="meshes/Light_shades_breakfast_room_Interior_010.ply"/>
+		<ref id="mat-breakfast_room:Frosted_Glass" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Baseboard_breakfast_room_Interior_011">
+		<string name="filename" value="meshes/Baseboard_breakfast_room_Interior_011.ply"/>
+		<ref id="mat-breakfast_room:Paint___White_Gloss" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Teaspoons_breakfast_room_Interior_012">
+		<string name="filename" value="meshes/Teaspoons_breakfast_room_Interior_012.ply"/>
+		<ref id="mat-Material_005.001" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-tabletop_breakfast_room_Interior_069">
+		<string name="filename" value="meshes/tabletop_breakfast_room_Interior_069.ply"/>
+		<ref id="mat-breakfast_room:White_Marble" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-wall_art_breakfast_room_Interior_075">
+		<string name="filename" value="meshes/wall_art_breakfast_room_Interior_075.ply"/>
+		<ref id="mat-breakfast_room:Artwork" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Plates_breakfast_room_Interior_101">
+		<string name="filename" value="meshes/Plates_breakfast_room_Interior_101.ply"/>
+		<ref id="mat-breakfast_room:Ceramic_001" name="bsdf"/>
+	</shape>
+	<shape type="ply" id="mesh-Teacups_breakfast_room_Interior_083">
+		<string name="filename" value="meshes/Teacups_breakfast_room_Interior_083.ply"/>
+		<ref id="mat-breakfast_room:Ceramic_001" name="bsdf"/>
+	</shape>
+</scene>

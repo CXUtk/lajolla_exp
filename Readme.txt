@@ -1,0 +1,1 @@
+You can run the test scenes using cbox\cbox_bdpt.xml, other files under this directory are also valid scenes.

@@ -1,0 +1,1449 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+	<default name="spp" value="4"/>
+	<default name="resx" value="1280"/>
+	<default name="resy" value="720"/>
+
+<!-- Camera and Rendering Parameters -->
+
+	<medium type="homogeneous" id="medium">
+		<rgb name="sigmaA" value="0.05 0.05 0.05"/>
+		<rgb name="sigmaS" value="0.16 0.16 0.16"/>
+		<float name="scale" value="1"/>
+
+<!-- 		<phase type="hg">
+			<float name="g" value="0.5"/>
+		</phase> -->
+	</medium>
+
+	<integrator type="bdpt">
+		<integer name="maxDepth" value="6"/>
+	</integrator>
+	<sensor type="perspective">
+		<string name="fov_axis" value="x"/>
+		<float name="fov" value="73.429977"/>
+		<float name="principal_point_offset_x" value="0.000000"/>
+		<float name="principal_point_offset_y" value="-0.000000"/>
+		<float name="near_clip" value="0.100000"/>
+		<float name="far_clip" value="100.000000"/>
+		<transform name="to_world">
+			<rotate x="1" angle="-166.40000554119374"/>
+			<rotate y="1" angle="-26.899994829063417"/>
+			<rotate z="1" angle="-180.00000500895632"/>
+			<translate value="2.721807 2.471434 7.931911"/>
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp"/>
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx"/>
+			<integer name="height" value="$resy"/>
+		</film>
+		<ref id="medium"/>
+	</sensor>
+<!-- Materials -->
+
+	<bsdf type="twosided" id="mat-LampshaderOuter">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/shade-stripes.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-LoveLettersBack">
+		<bsdf type="principled">
+			<rgb value="0.100000 0.020000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-DullSteel">
+		<bsdf type="principled">
+			<rgb value="0.100000 0.100000 0.100000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.922540"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-RadioPlastic">
+		<bsdf type="principled">
+			<rgb value="0.650000 0.570000 0.400000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.945228"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-BlindMaterial">
+		<bsdf type="principled">
+			<rgb value="0.950000 0.950000 0.950000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.968377"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.050000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Picture5">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/photo4.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-SofaLeather">
+		<bsdf type="principled">
+			<rgb value="0.900000 0.900000 0.900000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-SmallPictureFrame">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.936754"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Walls">
+		<bsdf type="principled">
+			<rgb value="0.600000 0.600000 0.600000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-TableGlossy">
+		<bsdf type="principled">
+			<rgb value="0.990000 0.990000 0.990000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Ceramic">
+		<bsdf type="principled">
+			<rgb value="0.300000 0.300000 0.300000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.910557"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-RadioInside">
+		<bsdf type="principled">
+			<rgb value="0.200000 0.200000 0.200000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-LargePicture">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/pic5wide.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-BlackWroughtIron">
+		<bsdf type="principled">
+			<rgb value="0.080000 0.060000 0.055000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.945228"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.093333"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-RadiatorPanelsEnamel">
+		<bsdf type="principled">
+			<rgb value="0.950000 0.950000 0.950000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.936754"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-RadioSurround">
+		<bsdf type="principled">
+			<rgb value="0.200000 0.100000 0.010000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Floor">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/wood4.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.929289"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.050000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Trim">
+		<bsdf type="principled">
+			<rgb value="0.950000 0.950000 0.950000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.945228"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.040000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Apple">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/apple.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.916334"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.030000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Carpet">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/carpet-text3b.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-RadiatorKnobOuter">
+		<bsdf type="principled">
+			<rgb value="0.800000 0.010000 0.010000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Default">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Cushion3">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/cushion-purple-yellow-stripe.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-LampStand">
+		<bsdf type="principled">
+			<rgb value="0.900000 0.900000 0.900000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.900000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.100000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Cushion">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/cushion-green-circles.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Books">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/book-spines.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.858579"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.050000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-TvScreen">
+		<bsdf type="principled">
+			<rgb value="0.010000 0.010000 0.010000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.945228"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Picture2">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/photo3.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Magazine">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/magazine.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.858579"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.050000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-TvBevel">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.922540"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.050000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-CeilingLampshade">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/Shade-paper.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-BlackMarble">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.858579"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.010000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Cushion1">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/cushion-stripe-purple.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.494036"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.001000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-CandleHolders">
+		<bsdf type="principled">
+			<rgb value="0.000000 0.000000 0.000000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.877526"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Picture">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/picture11-vert.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Picture1">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/photo1.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Picture4">
+		<bsdf type="principled">
+			<texture type="bitmap" name="base_color">
+				<string name="filename" value="textures/photo2.jpg"/>
+			</texture>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.000000"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.200000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="mat-WhitePaint">
+		<bsdf type="principled">
+			<rgb value="0.950000 0.950000 0.950000" name="base_color"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.945228"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.040000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="twosided" id="default-bsdf">
+		<bsdf type="diffuse"/>
+	</bsdf>
+
+<!-- Emitters -->
+
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="1.855000 0.000000 0.000000 0.000000 0.000000 -0.950363 0.187303 2.066908 0.000000 -0.383972 -0.463592 -0.743482 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="13.411349 13.411349 13.411349" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.120000 0.000000 0.000000 -0.786888 0.000000 0.000000 0.500000 3.154215 0.000000 -0.095000 0.000000 4.225713 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="0.000000 0 548.245605" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.120000 0.000000 0.000000 1.496100 0.000000 0.000000 0.500000 3.165614 0.000000 -0.095000 0.000000 3.513880 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="548.245605 0.000000 0" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.120000 0.000000 0.000000 0.335251 0.000000 0.000000 0.500000 3.163378 0.000000 -0.095000 0.000000 2.279136 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="0.000000 548.245605 0" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+
+<!-- Shapes -->
+
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__10_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LampshaderOuter" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__102_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__106_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__107_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioPlastic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__108_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__109_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__110_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Picture5" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__111_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__112_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SmallPictureFrame" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__113_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Walls" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__114_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TableGlossy" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__116_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__117_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioInside" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__118_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__119_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__12_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LargePicture" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__121_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__122_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__123_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__124_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__125_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__126_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__127_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__128_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__129_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__13_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__130_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__131_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__132_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioSurround" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__133_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__134_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__135_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__136_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__137_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__14_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__140_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Walls" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__141_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Floor" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__142_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__143_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Trim" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__144_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Trim" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__145_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Walls" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__147_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__149_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Walls" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__15_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Apple" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__150_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__151_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioPlastic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__152_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Carpet" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__153_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TableGlossy" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__154_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__155_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__156_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__157_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__158_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__16_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Walls" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__160_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__161_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__162_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__163_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__164_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__165_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorKnobOuter" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__166_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__167_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__168_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__169_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__17_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__170_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__171_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__172_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__175_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Default" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__176_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Cushion3" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__177_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__178_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__179_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LampStand" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__18_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioPlastic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__180_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__181_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadiatorPanelsEnamel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__2_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__21_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Cushion" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__22_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__23_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TableGlossy" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__24_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__25_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__26_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__27_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__28_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__29_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TvScreen" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__3_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioPlastic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__31_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__32_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__33_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__34_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__35_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__37_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__38_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__39_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__41_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Default" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__42_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__43_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__44_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__45_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__46_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__47_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SmallPictureFrame" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__48_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Picture2" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__49_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Magazine" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__50_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SmallPictureFrame" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__51_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TvBevel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__52_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioPlastic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__53_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-CeilingLampshade" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__54_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackMarble" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__55_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Trim" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__57_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Cushion1" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__58_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Default" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__6_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__60_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Cushion1" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__61_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-CandleHolders" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__64_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-CandleHolders" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__65_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__66_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Apple" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__67_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__68_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__69_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Picture" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__7_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__70_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__71_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__73_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__74_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SmallPictureFrame" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__75_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__77_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-RadioSurround" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__8_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__80_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__81_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlackWroughtIron" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__82_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Ceramic" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__83_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-CandleHolders" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__84_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__85_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Default" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__86_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__87_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__88_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-SofaLeather" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__89_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Apple" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__90_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__91_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-TableGlossy" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__92_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Picture1" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__93_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Apple" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__94_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-DullSteel" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__95_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-LoveLettersBack" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__96_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Books" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__97_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-BlindMaterial" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Mesh__99_.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-Picture4" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/WhitePaint.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="mat-WhitePaint" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Cube.ply"/>
+		<boolean name="face_normals" value="true"/>
+		<ref id="default-bsdf" name="bsdf"/>
+	</shape>
+</scene>

@@ -1,0 +1,160 @@
+<scene version="2.1.0">
+
+<!-- Defaults, these can be set via the command line: -Darg=value -->
+
+	<default name="spp" value="256"/>
+	<default name="resx" value="1280"/>
+	<default name="resy" value="720"/>
+
+<!-- Camera and Rendering Parameters -->
+
+	<integrator type="path">
+		<integer name="max_depth" value="12"/>
+	</integrator>
+	<sensor type="perspective">
+		<string name="fov_axis" value="x"/>
+		<float name="fov" value="58.715509"/>
+		<float name="principal_point_offset_x" value="0.000000"/>
+		<float name="principal_point_offset_y" value="-0.000000"/>
+		<float name="near_clip" value="0.100000"/>
+		<float name="far_clip" value="100.000000"/>
+		<transform name="to_world">
+			<rotate x="1" angle="10.000003124187506"/>
+			<rotate y="1" angle="90.00000250447816"/>
+			<translate value="-19.043369 6.409770 0.534836"/>
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp"/>
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx"/>
+			<integer name="height" value="$resy"/>
+		</film>
+	</sensor>
+
+<!-- Materials -->
+	<texture type="bitmap" id="wood">
+		<string name="filename" value="textures/wood.3.Bubinga.png"/>
+	</texture>
+
+	<texture type="bitmap" id="KAMEN">
+		<string name="filename" value="textures/KAMEN-stup.png.001.png"/>
+	</texture>
+
+	<texture type="bitmap" id="KAMEN2">
+		<string name="filename" value="textures/KAMEN-stup.png.001.png"/>
+	</texture>
+
+	<bsdf type="twosided" id="mat-Material">
+		<bsdf type="principled">
+			<ref name="base_color" id="wood"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.125378"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="0.500000"/>
+		</bsdf>
+	</bsdf>
+	<bsdf type="principled" id="mat-Material.001">
+		<ref name="base_color" id="KAMEN2"/>
+		<float name="spec_tint" value="0.000000"/>
+		<float name="spec_trans" value="0.500000"/>
+		<float name="metallic" value="0.000000"/>
+		<float name="anisotropic" value="0.000000"/>
+		<float name="roughness" value="0.255287"/>
+		<float name="sheen" value="0.000000"/>
+		<float name="sheen_tint" value="0.500000"/>
+		<float name="clearcoat" value="0.000000"/>
+		<float name="clearcoat_gloss" value="0.173205"/>
+		<float name="eta" value="1.450000"/>
+	</bsdf>
+	<bsdf type="principled" id="mat-Material.002">
+		<rgb value="0.088082 0.800000 0.194526" name="base_color"/>
+		<float name="spec_tint" value="0.000000"/>
+		<float name="spec_trans" value="0.790030"/>
+		<float name="metallic" value="0.000000"/>
+		<float name="anisotropic" value="0.000000"/>
+		<float name="roughness" value="0.255287"/>
+		<float name="sheen" value="0.000000"/>
+		<float name="sheen_tint" value="0.500000"/>
+		<float name="clearcoat" value="0.000000"/>
+		<float name="clearcoat_gloss" value="0.173205"/>
+		<float name="eta" value="1.450000"/>
+	</bsdf>
+	<bsdf type="principled" id="mat-Material.003">
+		<rgb value="0.800000 0.636904 0.216669" name="base_color"/>
+		<float name="spec_tint" value="0.000000"/>
+		<float name="spec_trans" value="0.021148"/>
+		<float name="metallic" value="1.000000"/>
+		<float name="anisotropic" value="0.000000"/>
+		<float name="roughness" value="0.178248"/>
+		<float name="sheen" value="0.000000"/>
+		<float name="sheen_tint" value="0.500000"/>
+		<float name="clearcoat" value="0.000000"/>
+		<float name="clearcoat_gloss" value="0.173205"/>
+		<float name="eta" value="1.450000"/>
+	</bsdf>
+	<bsdf type="twosided" id="mat-Material.005">
+		<bsdf type="principled">
+		    <ref name="base_color" id="KAMEN"/>
+			<float name="spec_tint" value="0.000000"/>
+			<float name="spec_trans" value="0.000000"/>
+			<float name="metallic" value="0.000000"/>
+			<float name="anisotropic" value="0.000000"/>
+			<float name="roughness" value="0.176737"/>
+			<float name="sheen" value="0.000000"/>
+			<float name="sheen_tint" value="0.500000"/>
+			<float name="clearcoat" value="0.000000"/>
+			<float name="clearcoat_gloss" value="0.173205"/>
+			<float name="specular" value="1.000000"/>
+		</bsdf>
+	</bsdf>
+
+<!-- Emitters -->
+
+	<emitter type="envmap">
+		<string name="filename" value="textures/envmap.exr"/>
+		<float name="scale" value="1.000000"/>
+		<transform name="to_world">
+			<matrix value="0.000000 0.000000 1.000000 0.000000 0.000000 1.000000 0.000000 0.000000 -1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+	</emitter>
+	<shape type="rectangle">
+		<boolean name="flip_normals" value="true"/>
+		<transform name="to_world">
+			<matrix value="0.478141 -0.018214 0.145084 6.910961 -0.145084 -0.120888 0.462965 7.443168 0.018214 -0.484824 -0.120888 -0.173073 0.000000 0.000000 0.000000 1.000000"/>
+		</transform>
+		<emitter type="area">
+			<rgb value="250.000000 250.000000 250.000000" name="radiance"/>
+		</emitter>
+		<bsdf type="null"/>
+	</shape>
+
+<!-- Shapes -->
+
+	<shape type="ply">
+		<string name="filename" value="meshes/Cube.ply"/>
+		<ref id="mat-Material" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Bunny.ply"/>
+		<ref id="mat-Material.001" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Bunny_001.ply"/>
+		<ref id="mat-Material.002" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Bunny_002.ply"/>
+		<ref id="mat-Material.003" name="bsdf"/>
+	</shape>
+	<shape type="ply">
+		<string name="filename" value="meshes/Sphere.ply"/>
+		<ref id="mat-Material.005" name="bsdf"/>
+	</shape>
+</scene>
