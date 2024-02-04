@@ -16,6 +16,25 @@ struct LightPath
 };
 
 
+struct PathVertexTreeNode
+{
+    PathVertex  Vertex;
+    PathVertex  NeeVertex;
+};
+
+/// An "LightPathTree" represents a tree of vertices of a light path with NEE
+/// We store the information we need for computing any sort of path contribution & sampling density.
+struct LightPathTree
+{
+    ReplayableSampler                   Sampler;
+    std::vector<PathVertexTreeNode>     Vertices;
+    Spectrum                            L;
+    Spectrum                            P_hat;
+};
+
+
+
+
 struct Reservoir
 {
     LightPath path;
@@ -338,10 +357,7 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
     output.ScreenPos = path.ScreenPos;
     if (path.Vertices.size() < length)
     {
-        for(const auto& v : path.Vertices)
-        {
-            output.Vertices.push_back(v);
-        }
+        output.Vertices = path.Vertices;
         output.L = make_const_spectrum(0);
         output.P_hat = make_const_spectrum(0);
         output.Sampler = context.sampler;
@@ -351,14 +367,12 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
 
     int light_id = -1;
     // Direct Case
-    if (path.Vertices[length - 1].shape_id != -1 && is_light(context.scene.shapes[path.Vertices[length - 1].shape_id]))
+    if (path.Vertices.size() == length && path.Vertices[length - 1].shape_id != -1 && is_light(context.scene.shapes[path.Vertices[length - 1].shape_id]))
     {
         const PathVertex& vertex = path.Vertices[length - 1];
         const PathVertex& prev_vertex = path.Vertices[length - 2];
-        for (int i = 0; i < length; i++)
-        {
-            output.Vertices.push_back(path.Vertices[i]);
-        }
+        output.Vertices = path.Vertices;
+
         light_id = (vertex.light_id == -1) ? get_area_light_id(context.scene.shapes[vertex.shape_id]) : vertex.light_id;
         assert(light_id >= 0);
         const Light& light = context.scene.lights[light_id];
@@ -371,17 +385,15 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
         Real pdf_scatter = vertex.pdfFwd;
         Real w = (pdf_scatter * pdf_scatter) / (pdf_nee * pdf_nee + pdf_scatter * pdf_scatter);
 
-        output.L = vertex.beta * emission(vertex, dir_light, context.scene);
-        output.P_hat = vertex.throughput * emission(vertex, dir_light, context.scene);
+        Spectrum E = emission(vertex, dir_light, context.scene);
+        output.L = vertex.beta * E;
+        output.P_hat = vertex.throughput * E;
         output.Sampler = context.sampler;
         paths.push_back(output);
     }
     else
     {
-        for (int i = 0; i < length; i++)
-        {
-            output.Vertices.push_back(path.Vertices[i]);
-        }
+        output.Vertices = path.Vertices;
         output.L = make_const_spectrum(0);
         output.P_hat = make_const_spectrum(0);
         output.Sampler = context.sampler;
@@ -395,6 +407,16 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
     //    const PathVertex& vertex = path.Vertices[length - 2];
     //    const PathVertex& prev_vertex = path.Vertices[length - 3];
 
+    //    if (vertex.vertexType == VertexType::Light)
+    //    {
+    //        output.Vertices = path.Vertices;
+    //        output.L = make_const_spectrum(0);
+    //        output.P_hat = make_const_spectrum(0);
+    //        output.Sampler = context.sampler;
+    //        paths.push_back(output);
+    //        return paths;
+    //    }
+
     //    output.Vertices.clear();
     //    for (int i = 0; i < length - 1; i++)
     //    {
@@ -402,7 +424,7 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
     //    }
 
     //    int self_light_id = -1;
-    //    if (is_light(context.scene.shapes[vertex.shape_id]))
+    //    if (vertex.shape_id != -1)
     //    {
     //        self_light_id = get_area_light_id(context.scene.shapes[vertex.shape_id]);
     //    }
@@ -430,29 +452,40 @@ std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
     //        Real w = (pdf_nee * pdf_nee) / (pdf_nee * pdf_nee + p_bsdf * p_bsdf);
 
     //        PathVertex lvertex{};
-    //        lvertex.vertexType = VertexType::Surface;
+    //        lvertex.vertexType = VertexType::Light;
     //        lvertex.position = point_on_light.position;
     //        lvertex.geometric_normal = point_on_light.normal;
     //        lvertex.light_id = lightId;
     //        lvertex.beta = vertex.beta * f_bsdf / pdf_nee * G;
+    //        lvertex.throughput = vertex.throughput * f_bsdf;
     //        lvertex.pdfFwd = pdf_nee / G;
 
     //        output.Vertices.push_back(lvertex);
-    //        output.L = vertex.beta * f_bsdf * L_nee / pdf_nee * G;
+    //        output.L = lvertex.beta * L_nee;
+    //        output.P_hat = lvertex.throughput * L_nee;
 
     //        output.Sampler = context.sampler;
-    //        //paths.push_back(output);
+    //        paths.push_back(output);
 
     //    }
     //    else
     //    {
-    //        // output.Vertices.push_back(lvertex);
+    //        output.Vertices = path.Vertices;
     //        output.L = make_const_spectrum(0);
-
+    //        output.P_hat = make_const_spectrum(0);
     //        output.Sampler = context.sampler;
-    //        //paths.push_back(output);
+    //        paths.push_back(output);
     //    }
 
+    //}
+    //else
+    //{
+    //    output.Vertices = path.Vertices;
+    //    output.L = make_const_spectrum(0);
+    //    output.P_hat = make_const_spectrum(0);
+    //    output.Sampler = context.sampler;
+    //    paths.push_back(output);
+    //    return paths;
     //}
 
     return paths;
@@ -570,45 +603,45 @@ Spectrum restir_eval_lightPath_no_nee(const PathTracingContext& context, const L
 
         if (vertex.vertexType != VertexType::Light)
         {
-            Spectrum pdf_trans_dir;
-            Spectrum pdf_trans_nee;
-            PointAndNormal point_on_light;
-            int lightId;
-            Spectrum L_nee = next_event_estimation_homogenized(context, vertex.position, vertex.geometric_normal,
-                &pdf_trans_dir, &pdf_trans_nee, &point_on_light, &lightId, selflightId);
+            //Spectrum pdf_trans_dir;
+            //Spectrum pdf_trans_nee;
+            //PointAndNormal point_on_light;
+            //int lightId;
+            //Spectrum L_nee = next_event_estimation_homogenized(context, vertex.position, vertex.geometric_normal,
+            //    &pdf_trans_dir, &pdf_trans_nee, &point_on_light, &lightId, selflightId);
 
-            if (max(L_nee) > 0)
-            {
-                const Material& mat = context.scene.materials[vertex.material_id];
-                Vector3 win = normalize(prev_vertex.position - vertex.position);
-                Vector3 wout = normalize(point_on_light.position - vertex.position);
-                Spectrum f_bsdf = eval(mat, win, wout, vertex, context.scene.texture_pool);
+            //if (max(L_nee) > 0)
+            //{
+            //    const Material& mat = context.scene.materials[vertex.material_id];
+            //    Vector3 win = normalize(prev_vertex.position - vertex.position);
+            //    Vector3 wout = normalize(point_on_light.position - vertex.position);
+            //    Spectrum f_bsdf = eval(mat, win, wout, vertex, context.scene.texture_pool);
 
-                Real G = max(dot(-wout, point_on_light.normal), Real(0)) /
-                    distance_squared(point_on_light.position, vertex.position);
+            //    Real G = max(dot(-wout, point_on_light.normal), Real(0)) /
+            //        distance_squared(point_on_light.position, vertex.position);
 
-                Real p_bsdf = pdf_sample_bsdf(
-                    mat, win, wout, vertex, context.scene.texture_pool) * G * average(pdf_trans_dir);
-                Real pdf_nee = average(pdf_trans_nee);
-                Real w = (pdf_nee * pdf_nee) / (pdf_nee * pdf_nee + p_bsdf * p_bsdf);
+            //    Real p_bsdf = pdf_sample_bsdf(
+            //        mat, win, wout, vertex, context.scene.texture_pool) * G * average(pdf_trans_dir);
+            //    Real pdf_nee = average(pdf_trans_nee);
+            //    Real w = (pdf_nee * pdf_nee) / (pdf_nee * pdf_nee + p_bsdf * p_bsdf);
 
-                if (selectLength == -1 || i == selectLength - 2)
-                {
-                    //L += vertex.beta * f_bsdf * L_nee / pdf_nee * w * G;
-                }
-            }
+            //    if (selectLength == -1 || i == selectLength - 2)
+            //    {
+            //        //L += vertex.beta * f_bsdf * L_nee / pdf_nee * w * G;
+            //    }
+            //}
         }
     }
 
     return L;
 }
 
-Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const LightPath& path, Spectrum* throughput, int selectLength = -1)
+Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const LightPath& path, Spectrum* throughput, bool selectLength, int selectedLength = -1)
 {
     int length = path.Vertices.size();
     Spectrum L = make_zero_spectrum();
     *throughput = make_zero_spectrum();
-    if (selectLength != -1 && length < selectLength - 1)
+    if (selectLength && length < selectedLength - 1)
     {
         return L;
     }
@@ -629,7 +662,7 @@ Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const Lig
             Vector3 win = prev_vertex.position - vertex.position;
             if (prev_vertex.vertexType == VertexType::Camera)
             {
-                if (selectLength == -1 || i == selectLength - 1)
+                if (!selectLength || i == selectedLength - 1)
                 {
                     L += emission(vertex, win, context.scene);
                     *throughput += emission(vertex, win, context.scene);
@@ -650,7 +683,7 @@ Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const Lig
                 Real pdf_scatter = vertex.pdfFwd;
                 Real w = (pdf_scatter * pdf_scatter) / (pdf_nee * pdf_nee + pdf_scatter * pdf_scatter);
 
-                if (selectLength == -1 || i == selectLength - 1)
+                if (!selectLength || i == selectedLength - 1)
                 {
                     L += vertex.beta * emission(vertex, dir_light, context.scene) * w;
                     *throughput += vertex.throughput * emission(vertex, dir_light, context.scene);
@@ -684,7 +717,7 @@ Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const Lig
             Real pdf_nee = average(pdf_trans_nee);
             Real w = (pdf_nee * pdf_nee) / (pdf_nee * pdf_nee + p_bsdf * p_bsdf);
 
-            if (selectLength == -1 || i == selectLength - 2)
+            if (!selectLength || i == selectedLength - 2)
             {
                 L += vertex.beta * f_bsdf * G / pdf_nee * L_nee * w;
                 *throughput += vertex.throughput * f_bsdf * G * L_nee;
@@ -752,15 +785,14 @@ Image3 do_restir_pt(const Scene& scene)
                             RayDifferential{ Real(0), Real(0) },
                             scene.camera.medium_id,
                             0 };
-                        LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth + 1);
+                        LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
 
 #if RAW_PT_OUTPUT
                         Spectrum throughput;
-                        Spectrum L = restir_eval_lightPath_full(context, cameraPath, &throughput, scene.options.max_depth);
+                        Spectrum L = restir_eval_lightPath_full(context, cameraPath, &throughput, true, scene.options.max_depth);
                         cameraPath.L = L;
                         cameraPath.P_hat = throughput;
                         cameraPath.Sampler = sampler;
-                        allpaths[y * w + x].push_back(cameraPath);
 #else
                         std::vector<LightPath> paths = restir_select_subpath(context, cameraPath, scene.options.max_depth);
                         for (const auto& path : paths)
@@ -789,7 +821,7 @@ Image3 do_restir_pt(const Scene& scene)
                         //}
 
 #if RAW_PT_OUTPUT
-                        if (isfinite(L))
+                        if (isfinite(L) && !isnan(L))
                         {
                             // Hacky: exclude NaNs in the rendering.
                             img(x, y) += L;
@@ -830,7 +862,7 @@ Image3 do_restir_pt(const Scene& scene)
                 {
                     for (int x = x0; x < x1; x++)
                     {
-                        Reservoir R;
+                        Reservoir R{};
 
                         ReplayableSampler oldSampler = R.path.Sampler;
                         std::vector<Reservoir> neighbors;
@@ -840,12 +872,12 @@ Image3 do_restir_pt(const Scene& scene)
                         R.update(luminance(Rq.path.P_hat) * Rq.W * Rq.M, Rq.path, next_pcg32_real<Real>(rng));
                         neighbors.push_back(Rq);
 
-                        if (R.path.Vertices.size() > 2)
+                        if (Rq.path.Vertices.size() > 2)
                         {
-                            for (int k = 0; k < 25; k++)
+                            while(neighbors.size() < 30)
                             {
-                                int xx = x + next_pcg32(rng) % 200 - 100;
-                                int yy = y + next_pcg32(rng) % 200 - 100;
+                                int xx = x + next_pcg32(rng) % 100 - 50;
+                                int yy = y + next_pcg32(rng) % 100 - 50;
                                 if (xx < 0 || xx >= w || yy < 0 || yy >= h)
                                 {
                                     continue;
@@ -862,11 +894,11 @@ Image3 do_restir_pt(const Scene& scene)
                                     Vector2 screen_pos((x + sampler.next_double()) / w,
                                         (y + sampler.next_double()) / h);
 
-                                    if (Rn.path.Vertices[1].shape_id != pathReservoirs[y * w + x].path.Vertices[1].shape_id)
-                                    {
-                                        continue;
-                                    }
-                                    if (dot(Rn.path.Vertices[1].shading_frame.n, pathReservoirs[y * w + x].path.Vertices[1].shading_frame.n) < 0.98)
+                                    //if (Rn.path.Vertices[1].primitive_id != R.path.Vertices[1].primitive_id)
+                                    //{
+                                    //    continue;
+                                    //}
+                                    if (dot(Rn.path.Vertices[1].shading_frame.n, R.path.Vertices[1].shading_frame.n) < 0.98)
                                     {
                                         continue;
                                     }
@@ -878,31 +910,28 @@ Image3 do_restir_pt(const Scene& scene)
                                         RayDifferential{ Real(0), Real(0) },
                                         scene.camera.medium_id,
                                         0 };
-                                    LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth + 1);
+                                    LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
+                                    if (cameraPath.Vertices.size() <= 2)
+                                    {
+                                        continue;
+                                    }
                                     for (const auto& path : restir_select_subpath(context, cameraPath, scene.options.max_depth))
                                     {
+                                        Real J = 1;
 
-                                        //Real J = 1;
-                                        //if (cameraPath.Vertices.size() > 2 && R.path.Vertices.size() > 2)
-                                        //{
-                                        //    PathVertex xi = R.path.Vertices[1];
-                                        //    PathVertex xi1 = cameraPath.Vertices[2];
-                                        //    PathVertex yi = cameraPath.Vertices[1];
+                                        //Vector3 win = normalize(R.path.Vertices[0].position - R.path.Vertices[1].position);
+                                        //Vector3 wout = normalize(R.path.Vertices[2].position - R.path.Vertices[1].position);
+                                        //const Material& mat = context.scene.materials[R.path.Vertices[1].material_id];
+                                        //Real pdf_bsdf1 = pdf_sample_bsdf(mat, win, wout, R.path.Vertices[1], context.scene.texture_pool);
 
-                                        //    Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
-                                        //    Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
-
-                                        //    J = A * B;
-                                        //    //cameraPath.Vertices[1].pdfFwd = 1;
-
-                                        //    if (distance(xi1.position, yi.position) < 0.01)
-                                        //    {
-                                        //        continue;
-                                        //    }
-                                        //}
+                                        //win = normalize(path.Vertices[0].position - path.Vertices[1].position);
+                                        //wout = normalize(path.Vertices[2].position - path.Vertices[1].position);
+                                        //const Material& mat2 = context.scene.materials[path.Vertices[1].material_id];
+                                        //Real pdf_bsdf2 = pdf_sample_bsdf(mat2, win, wout, path.Vertices[1], context.scene.texture_pool);
+                                        //J = pdf_bsdf1 / pdf_bsdf2;
 
                                         Rn.path = path;
-                                        R.combine(luminance(Rn.path.P_hat), Rn, next_pcg32_real<Real>(rng));
+                                        R.combine(luminance(Rn.path.P_hat) / J, Rn, next_pcg32_real<Real>(rng));
                                         neighbors.push_back(pathReservoirs[yy * w + xx]);
                                     }
                                 }
@@ -923,24 +952,17 @@ Image3 do_restir_pt(const Scene& scene)
                                         0 };
                                     LightPath cameraPath = Rn.path;
 
-
-                                    if (dot(cameraPath.Vertices[1].shading_frame.n, R.path.Vertices[1].shading_frame.n) < 0.98)
+                                    if (Rn.path.Vertices[1].shape_id != Rq.path.Vertices[1].shape_id )
                                     {
-                                        //Rn.path = cameraPath;
-                                        //Rn.path.L = make_zero_spectrum();
-                                        //Rn.path.P_hat = make_zero_spectrum();
-
-                                        //R.combine(0, Rn, next_pcg32_real<Real>(rng));
+                                        continue;
+                                    }
+                                    if (dot(Rn.path.Vertices[1].shading_frame.n, Rq.path.Vertices[1].shading_frame.n) < 0.98)
+                                    {
                                         continue;
                                     }
 
                                     if (cameraPath.Vertices.size() <= 2)
                                     {
-                                        //Rn.path = cameraPath;
-                                        //Rn.path.L = make_zero_spectrum();
-                                        //Rn.path.P_hat = make_zero_spectrum();
-
-                                        //R.combine(0, Rn, next_pcg32_real<Real>(rng));
                                         continue;
                                     }
 
@@ -951,8 +973,14 @@ Image3 do_restir_pt(const Scene& scene)
                                     PathVertex xi1 = cameraPath.Vertices[2];
                                     PathVertex yi = cameraPath.Vertices[1];
 
+
                                     Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
                                     Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
+
+                                    if (length(xi1.position - xi.position) < 1)
+                                    {
+                                        continue;
+                                    }
 
                                     if (length(xi1.geometric_normal) > 0)
                                     {
@@ -986,7 +1014,7 @@ Image3 do_restir_pt(const Scene& scene)
                             }
                             
                         }
-                        int Z = 0;
+                        Real Z = 0;
                         if (scene.options.shiftMapping == ShiftMappingType::RandomReplay)
                         {
                             for (auto Rn : neighbors)
@@ -1006,7 +1034,7 @@ Image3 do_restir_pt(const Scene& scene)
                                     RayDifferential{ Real(0), Real(0) },
                                     scene.camera.medium_id,
                                     0 };
-                                LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth + 1);
+                                LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
                                 for (const auto& path : restir_select_subpath(context, cameraPath, scene.options.max_depth))
                                 {
                                     if (luminance(path.P_hat) > 0)
@@ -1060,10 +1088,13 @@ Image3 do_restir_pt(const Scene& scene)
                             Spectrum d = make_zero_spectrum();
                             if (luminance(R.path.P_hat) > 0)
                             {
-                                d = R.path.P_hat * R.W; // (R.path.P_hat / luminance(R.path.P_hat)) * (R.w_sum / R.M);
+                                d = R.path.P_hat * R.W;
                             }
-                            img(x, y) += d;
-                            img_cnt(x, y) += 1;
+                            if (isfinite(d) && !isnan(d))
+                            {
+                                img(x, y) += d;
+                                img_cnt(x, y) += 1;
+                            }
                         }
                         else
                         {
