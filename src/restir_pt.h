@@ -4,6 +4,11 @@
 
 #define RAW_PT_OUTPUT 0
 
+enum class SampleMethod
+{
+    BSDF,
+    NEE
+};
 /// An "LightPath" represents a list of vertices of a light path
 /// We store the information we need for computing any sort of path contribution & sampling density.
 struct LightPath
@@ -13,6 +18,9 @@ struct LightPath
     std::vector<PathVertex>     Vertices;
     Spectrum                    L;
     Spectrum                    P_hat;
+    SampleMethod                SampleMethod = SampleMethod::BSDF;
+    Real                        Pdf1 = 0;
+    Real                        Pdf2 = 0;
 };
 
 
@@ -33,6 +41,10 @@ struct LightPathTree
 };
 
 
+void printfVec3(const Spectrum& v)
+{
+    printf("%lf %lf %lf", v.x, v.y, v.z);
+}
 
 
 struct Reservoir
@@ -292,7 +304,16 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
 
 
             pdfFwd = pdf_bsdf;
-            beta *= f_bsdf / pdfFwd * corrrect_shading_normal(curVertex, win, bsdf_sample_->dir_out, direction);
+
+            if (pdfFwd == 0)
+            {
+                beta = make_zero_spectrum();
+            }
+            else
+            {
+                beta *= f_bsdf / pdfFwd * corrrect_shading_normal(curVertex, win, bsdf_sample_->dir_out, direction);
+            }
+
             throughput *= f_bsdf;
             pdfRev = pdf_sample_bsdf(mat, bsdf_sample_->dir_out, win, curVertex, scene.texture_pool, reverse_dir(direction));
 
@@ -346,6 +367,144 @@ LightPath restir_gen_camera_subpath(const Scene& scene,
     restir_random_walk(path, scene, ray, ray_diff, sampler, cameraVertex.beta, pdf_dir, maxDepth - 1,
         TransportDirection::TO_LIGHT);
     return path;
+}
+
+std::vector<LightPath> restir_select_subpath_nee(const PathTracingContext& context,
+    const LightPath& path,
+    int length)
+{
+    std::vector<LightPath> paths;
+    LightPath output{};
+    output.ScreenPos = path.ScreenPos;
+    if (path.Vertices.size() < length - 1)
+    {
+        output.Vertices = path.Vertices;
+        output.L = make_const_spectrum(0);
+        output.P_hat = make_const_spectrum(0);
+        output.Sampler = context.sampler;
+        paths.push_back(output);
+        output.SampleMethod = SampleMethod::NEE;
+        paths.push_back(output);
+        return paths;
+    }
+
+    int light_id = -1;
+    // Direct Case
+    if (path.Vertices.size() >= length && path.Vertices[length - 1].shape_id != -1 && is_light(context.scene.shapes[path.Vertices[length - 1].shape_id]))
+    {
+        const PathVertex& vertex = path.Vertices[length - 1];
+        const PathVertex& prev_vertex = path.Vertices[length - 2];
+        output.Vertices = path.Vertices;
+
+        light_id = (vertex.light_id == -1) ? get_area_light_id(context.scene.shapes[vertex.shape_id]) : vertex.light_id;
+        assert(light_id >= 0);
+        const Light& light = context.scene.lights[light_id];
+        Vector3 win = prev_vertex.position - vertex.position;
+        Vector3 dir_light = normalize(win);
+        Real G = max(dot(dir_light, vertex.geometric_normal), Real(0)) / dot(win, win);
+
+        PointAndNormal point_on_light = { vertex.position, vertex.geometric_normal };
+        Real pdf_nee = light_pmf(context.scene, light_id) * pdf_point_on_light(light, point_on_light, prev_vertex.position, context.scene);
+        Real pdf_scatter = vertex.pdfFwd;
+        Real w = (pdf_scatter * pdf_scatter) / (pdf_nee * pdf_nee + pdf_scatter * pdf_scatter);
+
+        Spectrum E = emission(vertex, dir_light, context.scene);
+        output.L = vertex.beta * E;
+        output.P_hat = vertex.throughput * E;
+        output.Sampler = context.sampler;
+        output.Pdf1 = pdf_scatter;
+        output.Pdf2 = pdf_nee;
+        paths.push_back(output);
+    }
+    else
+    {
+        output.Vertices = path.Vertices;
+        output.L = make_const_spectrum(0);
+        output.P_hat = make_const_spectrum(0);
+        output.Sampler = context.sampler;
+        paths.push_back(output);
+    }
+
+    // NEE Case
+    assert(length >= 3);
+    const PathVertex& vertex = path.Vertices[length - 2];
+    const PathVertex& prev_vertex = path.Vertices[length - 3];
+
+    if (vertex.vertexType == VertexType::Light)
+    {
+        output.Vertices = path.Vertices;
+        output.L = make_const_spectrum(0);
+        output.P_hat = make_const_spectrum(0);
+        output.Sampler = context.sampler;
+        output.SampleMethod = SampleMethod::NEE;
+        paths.push_back(output);
+        return paths;
+    }
+
+    output.Vertices.clear();
+    for (int i = 0; i < length - 1; i++)
+    {
+        output.Vertices.push_back(path.Vertices[i]);
+    }
+
+    int self_light_id = -1;
+    if (vertex.shape_id != -1)
+    {
+        self_light_id = get_area_light_id(context.scene.shapes[vertex.shape_id]);
+    }
+
+    Spectrum pdf_trans_dir;
+    Spectrum pdf_trans_nee;
+    PointAndNormal point_on_light;
+    int lightId;
+    Spectrum L_nee = next_event_estimation_homogenized(context, vertex.position, vertex.geometric_normal,
+        &pdf_trans_dir, &pdf_trans_nee, &point_on_light, &lightId, self_light_id);
+
+    if (max(L_nee) > 0)
+    {
+        const Material& mat = context.scene.materials[vertex.material_id];
+        Vector3 win = normalize(prev_vertex.position - vertex.position);
+        Vector3 wout = normalize(point_on_light.position - vertex.position);
+        Spectrum f_bsdf = eval(mat, win, wout, vertex, context.scene.texture_pool);
+
+        Real G = max(dot(-wout, point_on_light.normal), Real(0)) /
+            distance_squared(point_on_light.position, vertex.position);
+
+        Real p_bsdf = pdf_sample_bsdf(
+            mat, win, wout, vertex, context.scene.texture_pool) * G * average(pdf_trans_dir);
+        Real pdf_nee = average(pdf_trans_nee);
+        Real w = (pdf_nee * pdf_nee) / (pdf_nee * pdf_nee + p_bsdf * p_bsdf);
+
+        PathVertex lvertex{};
+        lvertex.vertexType = VertexType::Light;
+        lvertex.position = point_on_light.position;
+        lvertex.geometric_normal = point_on_light.normal;
+        lvertex.light_id = lightId;
+        lvertex.beta = vertex.beta * f_bsdf * G / pdf_nee;
+        lvertex.throughput = vertex.throughput * f_bsdf * G;
+        lvertex.pdfFwd = pdf_nee / G;
+
+        output.Vertices.push_back(lvertex);
+        output.L = lvertex.beta * L_nee;
+        output.P_hat = lvertex.throughput * L_nee;
+        output.Pdf1 = pdf_nee;
+        output.Pdf2 = p_bsdf;
+
+        output.Sampler = context.sampler;
+        output.SampleMethod = SampleMethod::NEE;
+        paths.push_back(output);
+
+    }
+    else
+    {
+        output.Vertices = path.Vertices;
+        output.L = make_const_spectrum(0);
+        output.P_hat = make_const_spectrum(0);
+        output.Sampler = context.sampler;
+        output.SampleMethod = SampleMethod::NEE;
+        paths.push_back(output);
+    }
+    return paths;
 }
 
 std::vector<LightPath> restir_select_subpath(const PathTracingContext& context,
@@ -685,8 +844,8 @@ Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const Lig
 
                 if (!selectLength || i == selectedLength - 1)
                 {
-                    L += vertex.beta * emission(vertex, dir_light, context.scene) * w;
-                    *throughput += vertex.throughput * emission(vertex, dir_light, context.scene);
+                    //L += vertex.beta * emission(vertex, dir_light, context.scene) * w;
+                    //*throughput += vertex.throughput * emission(vertex, dir_light, context.scene);
                 }
             }
         }
@@ -719,7 +878,7 @@ Spectrum restir_eval_lightPath_full(const PathTracingContext& context, const Lig
 
             if (!selectLength || i == selectedLength - 2)
             {
-                L += vertex.beta * f_bsdf * G / pdf_nee * L_nee * w;
+                L += vertex.beta * f_bsdf * G / pdf_nee * L_nee;
                 *throughput += vertex.throughput * f_bsdf * G * L_nee;
             }
         }
@@ -764,18 +923,19 @@ Image3 do_restir_pt(const Scene& scene)
             {
                 for (int x = x0; x < x1; x++)
                 {
-                    Reservoir pathReservoir{};
+                    Reservoir R_BSDF{};
+                    Reservoir R_NEE{};
                     for (int i = 0; i < spp; i++)
                     {
                         Spectrum radiance = make_zero_spectrum();
                         sampler.start_iteration();
 
-                        Vector2 screen_pos((x + sampler.next_double()) / w,
-                            (y + sampler.next_double()) / h);
+                        //Vector2 screen_pos((x + sampler.next_double()) / w,
+                        //    (y + sampler.next_double()) / h);
 
 
-                        //Vector2 screen_pos((x + 0.5) / w,
-                        //    (y + 0.5) / h);
+                        Vector2 screen_pos((x + 0.5) / w,
+                            (y + 0.5) / h);
 
 
                         PathTracingContext context{
@@ -794,7 +954,7 @@ Image3 do_restir_pt(const Scene& scene)
                         cameraPath.P_hat = throughput;
                         cameraPath.Sampler = sampler;
 #else
-                        std::vector<LightPath> paths = restir_select_subpath(context, cameraPath, scene.options.max_depth);
+                        std::vector<LightPath> paths = restir_select_subpath_nee(context, cameraPath, scene.options.max_depth);
                         for (const auto& path : paths)
                         {
                             Spectrum L = path.L;
@@ -803,7 +963,19 @@ Image3 do_restir_pt(const Scene& scene)
                                 //Reservoir smallRes{};
                                 //smallRes.update(luminance(L), path, sampler.next_double());
                                 //pathReservoir.combine(luminance(path.P_hat), smallRes, sampler.next_double());
-                                pathReservoir.update(luminance(L), path, sampler.next_double());
+                                if (path.SampleMethod == SampleMethod::BSDF)
+                                {
+                                    R_BSDF.update(luminance(L), path, sampler.next_double());
+                                }
+                                else if (path.SampleMethod == SampleMethod::NEE)
+                                {
+                                    R_NEE.update(luminance(L), path, sampler.next_double());
+                                }
+                                //if (luminance(L) > 0)
+                                //{
+                                //    printf("");
+                                //}
+
                             }
                         }
 #endif
@@ -829,16 +1001,21 @@ Image3 do_restir_pt(const Scene& scene)
                         }
                         else
                         {
-                            printf("Error: L is not finite");
+                            printf("Error: L is not finite.\n");
                         }
 #endif
                     }
 
-                    if (pathReservoir.w_sum > 0)
+                    //Real pdf_bsdf = R_BRDF.path.Vertices[scene.options.max_depth - 1].pdfFwd;
+                    //Reservoir R{};
+                    //R.combine(R_BRDF.M * )
+                    //R_NEE.combine(luminance(R_BSDF.path.P_hat), R_BSDF, next_pcg32_real<Real>(rng));
+                    //R_BSDF
+                    if (R_NEE.w_sum > 0)
                     {
-                        pathReservoir.W = pathReservoir.w_sum / (pathReservoir.M * luminance(pathReservoir.path.P_hat));
+                        R_NEE.W = R_NEE.w_sum / (R_NEE.M * luminance(R_NEE.path.P_hat));
                     }
-                    pathReservoirs[y * w + x] = pathReservoir;
+                    pathReservoirs[y * w + x] = R_NEE;
                 }
             }
             reporter.update(1);
@@ -863,13 +1040,10 @@ Image3 do_restir_pt(const Scene& scene)
                     for (int x = x0; x < x1; x++)
                     {
                         Reservoir R{};
-
-                        ReplayableSampler oldSampler = R.path.Sampler;
                         std::vector<Reservoir> neighbors;
-
                         const Reservoir& Rq = pathReservoirs[y * w + x];
 
-                        R.update(luminance(Rq.path.P_hat) * Rq.W * Rq.M, Rq.path, next_pcg32_real<Real>(rng));
+                        R.combine(luminance(Rq.path.P_hat), Rq, next_pcg32_real<Real>(rng));
                         neighbors.push_back(Rq);
 
                         if (Rq.path.Vertices.size() > 2)
@@ -939,7 +1113,7 @@ Image3 do_restir_pt(const Scene& scene)
                                 {
 
                                     // ------------------------Vertex Reconnect-----------------------------------
-                                    ReplayableSampler sampler = oldSampler;
+                                    ReplayableSampler sampler = R.path.Sampler;
                                     sampler.replay();
                                     Vector2 screen_pos((x + sampler.next_double()) / w,
                                         (y + sampler.next_double()) / h);
@@ -952,11 +1126,11 @@ Image3 do_restir_pt(const Scene& scene)
                                         0 };
                                     LightPath cameraPath = Rn.path;
 
-                                    if (Rn.path.Vertices[1].shape_id != Rq.path.Vertices[1].shape_id )
+                                    if (Rn.path.Vertices[1].shape_id != R.path.Vertices[1].shape_id )
                                     {
                                         continue;
                                     }
-                                    if (dot(Rn.path.Vertices[1].shading_frame.n, Rq.path.Vertices[1].shading_frame.n) < 0.98)
+                                    if (dot(Rn.path.Vertices[1].shading_frame.n, R.path.Vertices[1].shading_frame.n) < 0.98)
                                     {
                                         continue;
                                     }
@@ -977,7 +1151,7 @@ Image3 do_restir_pt(const Scene& scene)
                                     Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
                                     Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
 
-                                    if (length(xi1.position - xi.position) < 1)
+                                    if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
                                     {
                                         continue;
                                     }
@@ -1089,11 +1263,19 @@ Image3 do_restir_pt(const Scene& scene)
                             if (luminance(R.path.P_hat) > 0)
                             {
                                 d = R.path.P_hat * R.W;
+                                //printfVec3(d);
+                                //printf(" | ");
+                                //printfVec3(R.path.L);
+                                //printf("\n");
                             }
                             if (isfinite(d) && !isnan(d))
                             {
                                 img(x, y) += d;
                                 img_cnt(x, y) += 1;
+                            }
+                            else
+                            {
+                                printf("Error: d is not finite");
                             }
                         }
                         else
