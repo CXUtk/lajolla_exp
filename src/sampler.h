@@ -154,17 +154,19 @@ struct MLTSampler
 
 struct ReplayableSampler
 {
-    ReplayableSampler()
+    ReplayableSampler() : ReplayableSampler(0)
     {
-        rng = init_pcg32(0);
+
     }
-    ReplayableSampler(int rngSequenceIndex)
+
+    ReplayableSampler(int rngSequenceIndex) : ReplayableSampler(init_pcg32(rngSequenceIndex))
     {
-        rng = init_pcg32(rngSequenceIndex);
+
     }
 
     ReplayableSampler(pcg32_state rngState)
     {
+        X = std::vector<std::vector<Real>>(2, std::vector<Real>());
         rng = rngState;
     }
 
@@ -172,7 +174,12 @@ struct ReplayableSampler
     {
         int index = next_index();
         ensure_ready(index);
-        return X[index];
+        return X[sampleStream][index];
+    }
+
+    void switch_stream(int streamId)
+    {
+        sampleStream = streamId;
     }
 
     int next_index()
@@ -188,26 +195,25 @@ struct ReplayableSampler
     void start_iteration()
     {
         sampleIndex = 0;
-        X.clear();
+        X[sampleStream].clear();
     }
 
     void ensure_ready(int index)
     {
-        if (index >= X.size())
+        if (index >= X[sampleStream].size())
         {
-            X.resize(index + 1);
-            Real& xi = X[index];
+            X[sampleStream].resize(index + 1);
+            Real& xi = X[sampleStream][index];
             xi = next_pcg32_real<Real>(rng);
         }
     }
 
-    std::vector<Real> exportRandSeq() const
-    {
-        return X;
-    }
-
     int sampleIndex = 0;
+    int sampleStream = 0;
 
-    std::vector<Real> X;
+
+    int streamCount = 2;
+
+    std::vector<std::vector<Real>> X;
     pcg32_state rng;
 };
