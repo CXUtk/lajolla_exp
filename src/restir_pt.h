@@ -60,6 +60,7 @@ struct Reservoir
     Real w_sum = 0;
     Real M = 0;
     Real W = 0;
+    int x, y;
 
     void update(Real w, const LightPathTree& path, Real rnd_param)
     {
@@ -352,10 +353,17 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
 LightPathTree restir_gen_camera_nee_pathtree(const Scene& scene,
     int x, int y, int h, int w,
     ReplayableSampler& sampler,
-    int maxDepth)
+    int maxDepth, bool replay=false)
 {
     sampler.switch_stream(0);
-    sampler.start_iteration();
+    if (replay)
+    {
+        sampler.replay();
+    }
+    else
+    {
+        sampler.start_iteration();
+    }
 
     //Vector2 screen_pos((x + 0.5) / w,
     //    (y + 0.5) / h);
@@ -371,7 +379,14 @@ LightPathTree restir_gen_camera_nee_pathtree(const Scene& scene,
     LightPath path = restir_gen_camera_subpath(scene, screen_pos, sampler, maxDepth);
 
     sampler.switch_stream(1);
-    sampler.start_iteration();
+    if (replay)
+    {
+        sampler.replay();
+    }
+    else
+    {
+        sampler.start_iteration();
+    }
 
     LightPathTree pathtree;
 
@@ -1116,6 +1131,9 @@ Image3 do_restir_pt(const Scene& scene)
                 {
                     Reservoir R_BSDF{};
                     Reservoir R_NEE{};
+                    R_NEE.x = x;
+                    R_NEE.y = y;
+
                     for (int i = 0; i < spp; i++)
                     {
                         Spectrum radiance = make_zero_spectrum();
@@ -1227,9 +1245,9 @@ Image3 do_restir_pt(const Scene& scene)
                         R.combine(luminance(Rq.pathTree.P_hat), Rq, next_pcg32_real<Real>(rng));
                         neighbors.push_back(Rq);
 
-                        if (Rq.path.Vertices.size() > 2)
+                        if (Rq.pathTree.Vertices.size() > 2)
                         {
-                            while(neighbors.size() < 30)
+                            for(int j = 0; j < 30; j++)
                             {
                                 int xx = x + next_pcg32(rng) % 100 - 50;
                                 int yy = y + next_pcg32(rng) % 100 - 50;
@@ -1243,12 +1261,12 @@ Image3 do_restir_pt(const Scene& scene)
                                 {
                                     // ----------------------------Random replay-------------------------------
                                     ReplayableSampler sampler = Rn.pathTree.Sampler;
-                                    sampler.switch_stream(0);
-                                    sampler.replay();
+                                    //sampler.switch_stream(0);
+                                    //sampler.replay();
 
-                                    Spectrum radiance = make_zero_spectrum();
-                                    Vector2 screen_pos((x + sampler.next_double()) / w,
-                                        (y + sampler.next_double()) / h);
+                                    //Spectrum radiance = make_zero_spectrum();
+                                    //Vector2 screen_pos((x + sampler.next_double()) / w,
+                                    //    (y + sampler.next_double()) / h);
 
                                     if (Rn.pathTree.Vertices[1].Vertex.primitive_id != R.pathTree.Vertices[1].Vertex.primitive_id)
                                     {
@@ -1259,199 +1277,223 @@ Image3 do_restir_pt(const Scene& scene)
                                         continue;
                                     }
 
-                                    restir_gen_camera_nee_pathtree()
-                                    PathTracingContext context{
+                                   LightPathTree tree = restir_gen_camera_nee_pathtree(scene, x, y, w, h, sampler, scene.options.max_depth, true);
+                                   /* PathTracingContext context{
                                         scene,
                                         sampler,
                                         sample_primary(scene.camera, screen_pos),
                                         RayDifferential{ Real(0), Real(0) },
                                         scene.camera.medium_id,
                                         0 };
-                                    LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
-                                    if (cameraPath.Vertices.size() <= 2)
+                                    LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);*/
+                                    if (tree.Vertices.size() <= 2)
                                     {
                                         continue;
                                     }
-                                    sampler.switch_stream(1);
-                                    sampler.replay();
-                                    for (const auto& path : restir_select_subpath_nee(context, cameraPath, scene.options.max_depth))
-                                    {
-                                        Real J = 1;
+                                    Real J = 1;
+                                    restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
+                                    Rn.pathTree = tree;
+                                    R.combine(luminance(Rn.pathTree.P_hat) / J, Rn, next_pcg32_real<Real>(rng));
+                                    neighbors.push_back(pathReservoirs[yy * w + xx]);
 
-                                        //Vector3 win = normalize(R.path.Vertices[0].position - R.path.Vertices[1].position);
-                                        //Vector3 wout = normalize(R.path.Vertices[2].position - R.path.Vertices[1].position);
-                                        //const Material& mat = context.scene.materials[R.path.Vertices[1].material_id];
-                                        //Real pdf_bsdf1 = pdf_sample_bsdf(mat, win, wout, R.path.Vertices[1], context.scene.texture_pool);
+                                    //sampler.switch_stream(1);
+                                    //sampler.replay();
+                                    //for (const auto& path : restir_select_subpath_nee(context, cameraPath, scene.options.max_depth))
+                                    //{
+                                    //    
 
-                                        //win = normalize(path.Vertices[0].position - path.Vertices[1].position);
-                                        //wout = normalize(path.Vertices[2].position - path.Vertices[1].position);
-                                        //const Material& mat2 = context.scene.materials[path.Vertices[1].material_id];
-                                        //Real pdf_bsdf2 = pdf_sample_bsdf(mat2, win, wout, path.Vertices[1], context.scene.texture_pool);
-                                        //J = pdf_bsdf1 / pdf_bsdf2;
-                                        if (path.SampleMethod == SampleMethod::NEE)
-                                        {
-                                            Rn.pathTree = path;
-                                            R.combine(luminance(Rn.path.P_hat) / J, Rn, next_pcg32_real<Real>(rng));
-                                            neighbors.push_back(pathReservoirs[yy * w + xx]);
-                                        }
-                                    }
+                                    //    //Vector3 win = normalize(R.path.Vertices[0].position - R.path.Vertices[1].position);
+                                    //    //Vector3 wout = normalize(R.path.Vertices[2].position - R.path.Vertices[1].position);
+                                    //    //const Material& mat = context.scene.materials[R.path.Vertices[1].material_id];
+                                    //    //Real pdf_bsdf1 = pdf_sample_bsdf(mat, win, wout, R.path.Vertices[1], context.scene.texture_pool);
+
+                                    //    //win = normalize(path.Vertices[0].position - path.Vertices[1].position);
+                                    //    //wout = normalize(path.Vertices[2].position - path.Vertices[1].position);
+                                    //    //const Material& mat2 = context.scene.materials[path.Vertices[1].material_id];
+                                    //    //Real pdf_bsdf2 = pdf_sample_bsdf(mat2, win, wout, path.Vertices[1], context.scene.texture_pool);
+                                    //    //J = pdf_bsdf1 / pdf_bsdf2;
+                                    //    if (path.SampleMethod == SampleMethod::NEE)
+                                    //    {
+                                    //       
+                                    //    }
+                                    //}
                                 }
                                 else if (scene.options.shiftMapping == ShiftMappingType::VertexReconnect)
                                 {
 
-                                    // ------------------------Vertex Reconnect-----------------------------------
-                                    ReplayableSampler sampler = R.path.Sampler;
-                                    sampler.replay();
-                                    Vector2 screen_pos((x + sampler.next_double()) / w,
-                                        (y + sampler.next_double()) / h);
-                                    PathTracingContext context{
-                                        scene,
-                                        sampler,
-                                        sample_primary(scene.camera, screen_pos),
-                                        RayDifferential{ Real(0), Real(0) },
-                                        scene.camera.medium_id,
-                                        0 };
-                                    LightPath cameraPath = Rn.path;
+                                    //// ------------------------Vertex Reconnect-----------------------------------
+                                    //ReplayableSampler sampler = R.path.Sampler;
+                                    //sampler.replay();
+                                    //Vector2 screen_pos((x + sampler.next_double()) / w,
+                                    //    (y + sampler.next_double()) / h);
+                                    //PathTracingContext context{
+                                    //    scene,
+                                    //    sampler,
+                                    //    sample_primary(scene.camera, screen_pos),
+                                    //    RayDifferential{ Real(0), Real(0) },
+                                    //    scene.camera.medium_id,
+                                    //    0 };
+                                    //LightPath cameraPath = Rn.path;
 
-                                    if (Rn.path.Vertices[1].shape_id != R.path.Vertices[1].shape_id )
-                                    {
-                                        continue;
-                                    }
-                                    if (dot(Rn.path.Vertices[1].shading_frame.n, R.path.Vertices[1].shading_frame.n) < 0.98)
-                                    {
-                                        continue;
-                                    }
+                                    //if (Rn.path.Vertices[1].shape_id != R.path.Vertices[1].shape_id )
+                                    //{
+                                    //    continue;
+                                    //}
+                                    //if (dot(Rn.path.Vertices[1].shading_frame.n, R.path.Vertices[1].shading_frame.n) < 0.98)
+                                    //{
+                                    //    continue;
+                                    //}
 
-                                    if (cameraPath.Vertices.size() <= 2)
-                                    {
-                                        continue;
-                                    }
-
-
-                                    Real J = 1;
-
-                                    PathVertex xi = R.path.Vertices[1];
-                                    PathVertex xi1 = cameraPath.Vertices[2];
-                                    PathVertex yi = cameraPath.Vertices[1];
+                                    //if (cameraPath.Vertices.size() <= 2)
+                                    //{
+                                    //    continue;
+                                    //}
 
 
-                                    Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
-                                    Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
+                                    //Real J = 1;
 
-                                    if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
-                                    {
-                                        continue;
-                                    }
+                                    //PathVertex xi = R.path.Vertices[1];
+                                    //PathVertex xi1 = cameraPath.Vertices[2];
+                                    //PathVertex yi = cameraPath.Vertices[1];
 
-                                    if (length(xi1.geometric_normal) > 0)
-                                    {
-                                        J = A * B;
-                                    }
-                                    //cameraPath.Vertices[1].pdfFwd = 1;
 
-                                    for (int s = 0; s < std::min(2ULL, std::min(cameraPath.Vertices.size(), R.path.Vertices.size())); s++)
-                                    {
-                                        cameraPath.Vertices[s] = R.path.Vertices[s];
-                                    }
+                                    //Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
+                                    //Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
 
-                                    Spectrum throughput = make_zero_spectrum();
-                                    Spectrum L = make_zero_spectrum();
+                                    //if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
+                                    //{
+                                    //    continue;
+                                    //}
 
-                                    if (restir_reeval_lightPath(context, cameraPath))
-                                    {
-                                        L = restir_eval_lightPath_no_nee(context, cameraPath, &throughput, scene.options.max_depth);
-                                    }
-                                    if (isfinite(L) && !isnan(L))
-                                    {
-                                        Rn.path = cameraPath;
-                                        Rn.path.L = L;
-                                        Rn.path.P_hat = throughput;
+                                    //if (length(xi1.geometric_normal) > 0)
+                                    //{
+                                    //    J = A * B;
+                                    //}
+                                    ////cameraPath.Vertices[1].pdfFwd = 1;
 
-                                        // R.update(luminance(throughput) / J * Rn.W * Rn.M, Rn.path, next_pcg32_real<Real>(rng));
-                                        R.combine(luminance(throughput) / J, Rn, next_pcg32_real<Real>(rng));
-                                        neighbors.push_back(pathReservoirs[yy * w + xx]);
-                                    }
+                                    //for (int s = 0; s < std::min(2ULL, std::min(cameraPath.Vertices.size(), R.path.Vertices.size())); s++)
+                                    //{
+                                    //    cameraPath.Vertices[s] = R.path.Vertices[s];
+                                    //}
+
+                                    //Spectrum throughput = make_zero_spectrum();
+                                    //Spectrum L = make_zero_spectrum();
+
+                                    //if (restir_reeval_lightPath(context, cameraPath))
+                                    //{
+                                    //    L = restir_eval_lightPath_no_nee(context, cameraPath, &throughput, scene.options.max_depth);
+                                    //}
+                                    //if (isfinite(L) && !isnan(L))
+                                    //{
+                                    //    Rn.path = cameraPath;
+                                    //    Rn.path.L = L;
+                                    //    Rn.path.P_hat = throughput;
+
+                                    //    // R.update(luminance(throughput) / J * Rn.W * Rn.M, Rn.path, next_pcg32_real<Real>(rng));
+                                    //    R.combine(luminance(throughput) / J, Rn, next_pcg32_real<Real>(rng));
+                                    //    neighbors.push_back(pathReservoirs[yy * w + xx]);
+                                    //}
                                 }
                             }
                             
                         }
-                        Real Z = R.M;
-                        //if (scene.options.shiftMapping == ShiftMappingType::RandomReplay)
-                        //{
-                        //    for (auto Rn : neighbors)
-                        //    {
-                        //        ReplayableSampler sampler = R.pathTree.Sampler;
-                        //        sampler.switch_stream(0);
-                        //        sampler.replay();
+                        Real Z = 0;
+                        if (scene.options.shiftMapping == ShiftMappingType::RandomReplay)
+                        {
+                            for (const auto& Rn : neighbors)
+                            {
+                                ReplayableSampler sampler = R.pathTree.Sampler;
+                                LightPathTree tree = restir_gen_camera_nee_pathtree(scene, Rn.x, Rn.y, w, h, sampler, scene.options.max_depth, true);
+                                /* PathTracingContext context{
+                                     scene,
+                                     sampler,
+                                     sample_primary(scene.camera, screen_pos),
+                                     RayDifferential{ Real(0), Real(0) },
+                                     scene.camera.medium_id,
+                                     0 };
+                                 LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);*/
+                                if (tree.Vertices.size() <= 2)
+                                {
+                                    continue;
+                                }
+                                
+                                restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
+                                if (luminance(tree.P_hat) > 0)
+                                {
+                                    Z += Rn.M;
+                                }
 
-                        //        Spectrum radiance = make_zero_spectrum();
-                        //        Vector2 screen_pos(((int)(Rn.pathTree.ScreenPos.x * w) + sampler.next_double()) / w,
-                        //            ((int)(Rn.pathTree.ScreenPos.y * h) + sampler.next_double()) / h);
+                                //sampler.switch_stream(0);
+                                //sampler.replay();
+
+                                //Spectrum radiance = make_zero_spectrum();
+                                //Vector2 screen_pos(( + sampler.next_double()) / w,
+                                //    ( + sampler.next_double()) / h);
 
 
-                        //        PathTracingContext context{
-                        //            scene,
-                        //            sampler,
-                        //            sample_primary(scene.camera, screen_pos),
-                        //            RayDifferential{ Real(0), Real(0) },
-                        //            scene.camera.medium_id,
-                        //            0 };
+                                //PathTracingContext context{
+                                //    scene,
+                                //    sampler,
+                                //    sample_primary(scene.camera, screen_pos),
+                                //    RayDifferential{ Real(0), Real(0) },
+                                //    scene.camera.medium_id,
+                                //    0 };
 
-                        //        LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
+                                //LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);
 
-                        //        sampler.switch_stream(1);
-                        //        sampler.replay();
-                        //        for (const auto& path : restir_select_subpath_nee(context, cameraPath, scene.options.max_depth))
-                        //        {
-                        //            if (path.SampleMethod == SampleMethod::NEE)
-                        //            {
-                        //                if (luminance(path.P_hat) > 0)
-                        //                {
-                        //                    Z += Rn.M;
-                        //                }
-                        //            }
-                        //        }
-                        //    }
-                        //}
-                        //else if (scene.options.shiftMapping == ShiftMappingType::VertexReconnect)
-                        //{
-                        //    for (auto Rn : neighbors)
-                        //    {
-                        //        ReplayableSampler sampler = Rn.path.Sampler;
-                        //        sampler.replay();
-                        //        Vector2 screen_pos((x + sampler.next_double()) / w,
-                        //            (y + sampler.next_double()) / h);
-                        //        PathTracingContext context{
-                        //            scene,
-                        //            sampler,
-                        //            sample_primary(scene.camera, screen_pos),
-                        //            RayDifferential{ Real(0), Real(0) },
-                        //            scene.camera.medium_id,
-                        //            0 };
-                        //        LightPath mainPath = R.path;
-                        //        for (int s = 0; s < std::min(2ULL, std::min(mainPath.Vertices.size(), Rn.path.Vertices.size())); s++)
-                        //        {
-                        //            mainPath.Vertices[s] = Rn.path.Vertices[s];
-                        //        }
-                        //        if (restir_reeval_lightPath(context, mainPath))
-                        //        {
-                        //            //R.M += Rn.M;
-                        //            Spectrum throughput = make_zero_spectrum();
-                        //            Spectrum L = restir_eval_lightPath_no_nee(context, mainPath, &throughput, scene.options.max_depth);
-                        //            if (luminance(throughput) > 0)
-                        //            {
-                        //                Z += Rn.M;
-                        //            }
-                        //            //else{
-                        //            //    if (Rn.path.Vertices.size() == scene.options.max_depth)
-                        //            //    {
-                        //            //        printf("");
-                        //            //    }
-                        //            //}
-                        //        }
-                        //    }
-                        //}
-                        if (R.w_sum > 0)
+                                //sampler.switch_stream(1);
+                                //sampler.replay();
+                                //for (const auto& path : restir_select_subpath_nee(context, cameraPath, scene.options.max_depth))
+                                //{
+                                //    if (path.SampleMethod == SampleMethod::NEE)
+                                //    {
+                                //        if (luminance(path.P_hat) > 0)
+                                //        {
+                                //            Z += Rn.M;
+                                //        }
+                                //    }
+                                //}
+                            }
+                        }
+                        else if (scene.options.shiftMapping == ShiftMappingType::VertexReconnect)
+                        {
+                            //for (auto Rn : neighbors)
+                            //{
+                            //    ReplayableSampler sampler = Rn.path.Sampler;
+                            //    sampler.replay();
+                            //    Vector2 screen_pos((x + sampler.next_double()) / w,
+                            //        (y + sampler.next_double()) / h);
+                            //    PathTracingContext context{
+                            //        scene,
+                            //        sampler,
+                            //        sample_primary(scene.camera, screen_pos),
+                            //        RayDifferential{ Real(0), Real(0) },
+                            //        scene.camera.medium_id,
+                            //        0 };
+                            //    LightPath mainPath = R.path;
+                            //    for (int s = 0; s < std::min(2ULL, std::min(mainPath.Vertices.size(), Rn.path.Vertices.size())); s++)
+                            //    {
+                            //        mainPath.Vertices[s] = Rn.path.Vertices[s];
+                            //    }
+                            //    if (restir_reeval_lightPath(context, mainPath))
+                            //    {
+                            //        //R.M += Rn.M;
+                            //        Spectrum throughput = make_zero_spectrum();
+                            //        Spectrum L = restir_eval_lightPath_no_nee(context, mainPath, &throughput, scene.options.max_depth);
+                            //        if (luminance(throughput) > 0)
+                            //        {
+                            //            Z += Rn.M;
+                            //        }
+                            //        //else{
+                            //        //    if (Rn.path.Vertices.size() == scene.options.max_depth)
+                            //        //    {
+                            //        //        printf("");
+                            //        //    }
+                            //        //}
+                            //    }
+                            //}
+                        }
+                        if (R.w_sum > 0 && Z > 0)
                         {
                             R.W = R.w_sum / (Z * luminance(R.pathTree.P_hat));
                         }
