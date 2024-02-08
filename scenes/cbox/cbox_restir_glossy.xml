@@ -2,7 +2,7 @@
 
 <scene version="0.4.0">
 	<integrator type="restirpt">
-		<integer name="maxDepth" value="3"/>
+		<integer name="maxDepth" value="4"/>
 		<integer name="iteration" value="1"/>
 		<integer name="shiftmapping" value="vertex_reconnect"/>
 	</integrator>
