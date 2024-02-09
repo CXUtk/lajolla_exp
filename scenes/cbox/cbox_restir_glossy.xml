@@ -3,7 +3,7 @@
 <scene version="0.4.0">
 	<integrator type="restirpt">
 		<integer name="maxDepth" value="4"/>
-		<integer name="iteration" value="1"/>
+		<integer name="iteration" value="4"/>
 		<integer name="shiftmapping" value="random_replay"/>
 	</integrator>
 
@@ -19,7 +19,7 @@
 		<float name="fov" value="39.3077"/>
 
 		<sampler type="ldsampler">
-			<integer name="sampleCount" value="4"/>
+			<integer name="sampleCount" value="32"/>
 		</sampler>
 
 		<film type="hdrfilm">
