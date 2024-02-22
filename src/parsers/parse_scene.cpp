@@ -628,6 +628,14 @@ RenderOptions parse_integrator(pugi::xml_node node,
                 {
                     options.shiftMapping = ShiftMappingType::RandomReplay;
                 }
+                else if (shift == "half_vector")
+                {
+                    options.shiftMapping = ShiftMappingType::HalfVector;
+                }
+                else if (shift == "hybrid")
+                {
+                    options.shiftMapping = ShiftMappingType::Hybrid;
+                }
                 else
                 {
                     Error(std::string("Unsupported shift mapping: ") + shift);

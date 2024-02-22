@@ -31,7 +31,9 @@ enum class Integrator {
 enum class ShiftMappingType
 {
     VertexReconnect,
-    RandomReplay
+    RandomReplay,
+    HalfVector,
+    Hybrid
 };
 
 struct RenderOptions {
