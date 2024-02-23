@@ -127,7 +127,7 @@ sample_bsdf_op::operator()(const DisneyMetal& bsdf) const
 
     return BSDFSampleRecord{
         to_world(frame, wout),
-        Real(0) /* eta */, roughness /* roughness */, eval(bsdf.base_color, vertex.uv, vertex.uv_screen_size, texture_pool), ComponentType::Specular };
+        Real(0) /* eta */, roughness /* roughness */, eval(bsdf.base_color, vertex.uv, vertex.uv_screen_size, texture_pool), (roughness < 0.5 ? ComponentType::Specular : ComponentType::Diffuse) };
 }
 
 TextureSpectrum get_texture_op::operator()(const DisneyMetal &bsdf) const {

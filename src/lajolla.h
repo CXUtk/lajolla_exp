@@ -77,3 +77,10 @@ inline Real radians(const Real deg) {
 inline Real degrees(const Real rad) {
     return (Real(180) / c_PI) * rad;
 }
+
+enum class ComponentType
+{
+    None,
+    Diffuse,
+    Specular
+};

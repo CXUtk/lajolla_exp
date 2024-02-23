@@ -83,6 +83,7 @@ struct PathVertex {
     Spectrum beta;
     Spectrum throughput;
     Real pdfFwd = 0, pdfRev = 0;
+    ComponentType componentType = ComponentType::None;
 };
 
 /// Intersect a ray with a scene. If the ray doesn't hit anything,

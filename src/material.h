@@ -9,12 +9,7 @@
 
 struct PathVertex;
 
-enum class ComponentType
-{
-    None,
-    Diffuse,
-    Specular
-};
+
 
 struct TraceFeature
 {
@@ -174,6 +169,15 @@ Real pdf_sample_bsdf(const Material &material,
                      const PathVertex &vertex,
                      const TexturePool &texture_pool,
                      TransportDirection dir = TransportDirection::TO_LIGHT);
+
+
+/// Classify the material's BSDF lobe (eg. as diffuse or specular)
+Real get_material_lobe_type(const Material& material,
+    const Vector3& dir_in,
+    const Vector3& dir_out,
+    const PathVertex& vertex,
+    const TexturePool& texture_pool,
+    TransportDirection dir = TransportDirection::TO_LIGHT);
 
 /// Return a texture from the material for debugging.
 /// If the material contains multiple textures, return an arbitrary one.

@@ -318,26 +318,31 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
                 break;
             }
 
+            curVertex.componentType = bsdf_sample_->sampleType;
+
             // Need copy half vector
             if (halfVectorCopyTree != nullptr)
             {
                 int index = path.Vertices.size() - 1;
 
-                const PathVertex& prev = halfVectorCopyTree->Vertices[index - 1].Vertex;
-                const PathVertex& cur = halfVectorCopyTree->Vertices[index].Vertex;
-                if (index + 1 < halfVectorCopyTree->Vertices.size())
+                if (index < halfVectorCopyTree->Vertices.size())
                 {
-                    const PathVertex& nxt = halfVectorCopyTree->Vertices[index + 1].Vertex;
-
-                    Vector3 H = normalize(prev.position - cur.position) + normalize(nxt.position - cur.position);
-                    H = normalize(H);
-
-                    Vector3 wout = reflect(-win, H);
-
-                    // TODO: Not implemented for transmission materials
-                    if (dot(wout, vertex.shading_frame.n) > 0)
+                    const PathVertex& prev = halfVectorCopyTree->Vertices[index - 1].Vertex;
+                    const PathVertex& cur = halfVectorCopyTree->Vertices[index].Vertex;
+                    if (index + 1 < halfVectorCopyTree->Vertices.size())
                     {
-                        bsdf_sample_->dir_out = wout;
+                        const PathVertex& nxt = halfVectorCopyTree->Vertices[index + 1].Vertex;
+
+                        Vector3 H = normalize(prev.position - cur.position) + normalize(nxt.position - cur.position);
+                        H = normalize(H);
+
+                        Vector3 wout = reflect(-win, H);
+
+                        // TODO: Not implemented for transmission materials
+                        if (dot(wout, vertex.shading_frame.n) > 0)
+                        {
+                            bsdf_sample_->dir_out = wout;
+                        }
                     }
                 }
             }
@@ -359,6 +364,7 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
             throughput *= f_bsdf;
             pdfRev = pdf_sample_bsdf(mat, bsdf_sample_->dir_out, win, curVertex, scene.texture_pool, reverse_dir(direction));
 
+
             currentRay = spawn_ray(scene, curVertex, bsdf_sample_->dir_out);
             prevVertex.pdfRev = convert_pdf(pdfRev, curVertex, prevVertex);
             currentMedium = updateMedium(currentRay.dir, curVertex, currentMedium);
@@ -376,6 +382,7 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
                 vertex.light_id = -1;
                 vertex.beta = beta;
                 vertex.throughput = beta;
+                vertex.componentType = ComponentType::None;
                 path.Vertices.push_back(vertex);
             }
             break;
@@ -996,7 +1003,7 @@ bool restir_reeval_lightPath(const PathTracingContext& context, LightPath& path)
 }
 
 
-bool restir_reeval_lightPathTree(const PathTracingContext& context, LightPathTree& pathTree)
+bool restir_reeval_lightPathTree(const Scene& scene, LightPathTree& pathTree)
 {
     TransportDirection direction = TransportDirection::TO_LIGHT;
     Spectrum beta = make_const_spectrum(1);
@@ -1007,9 +1014,9 @@ bool restir_reeval_lightPathTree(const PathTracingContext& context, LightPathTre
         PathVertex& end = pathTree.Vertices[i].Vertex;
         Vector3 orig = start.position;
         Ray shadow_ray{ orig, end.position - orig,
-            get_shadow_epsilon(context.scene),
-            (1 - get_shadow_epsilon(context.scene)) };
-        std::optional<PathVertex> vertex_ = intersect(context.scene, shadow_ray, context.rayDiff);
+            get_shadow_epsilon(scene),
+            (1 - get_shadow_epsilon(scene)) };
+        std::optional<PathVertex> vertex_ = intersect(scene, shadow_ray, RayDifferential{ Real(0), Real(0) });
 
         if (vertex_)
         {
@@ -1019,12 +1026,12 @@ bool restir_reeval_lightPathTree(const PathTracingContext& context, LightPathTre
         if (i < pathTree.Vertices.size() - 1)
         {
             PathVertex& next = pathTree.Vertices[i + 1].Vertex;
-            const Material& mat = context.scene.materials[end.material_id];
+            const Material& mat = scene.materials[end.material_id];
             // Let's do the hemispherical sampling next.
             Vector3 win = normalize(start.position - end.position);
             Vector3 wout = normalize(next.position - end.position);
-            Real pdf_bsdf = pdf_sample_bsdf(mat, win, wout, end, context.scene.texture_pool, direction);
-            Spectrum f_bsdf = eval(mat, win, wout, end, context.scene.texture_pool, direction);
+            Real pdf_bsdf = pdf_sample_bsdf(mat, win, wout, end, scene.texture_pool, direction);
+            Spectrum f_bsdf = eval(mat, win, wout, end, scene.texture_pool, direction);
 
             if (pdf_bsdf == 0)
             {
@@ -1484,10 +1491,12 @@ Image3 do_restir_pt(const Scene& scene)
                         R.x = x;
                         R.y = y;
 
+                        Real Z = 0;
                         if (Rq.pathTree.Vertices.size() > 2)
                         {
-                            //for(int k = 0; k < 15; k++)
-                            while(neighbors.size() < 15)
+                            //
+                            //while(neighbors.size() < 15)
+                            for (int k = 0; k < 15; k++)
                             {
                                 int xx = x + next_pcg32(rng) % 50 - 25;
                                 int yy = y + next_pcg32(rng) % 50 - 25;
@@ -1496,7 +1505,6 @@ Image3 do_restir_pt(const Scene& scene)
                                     continue;
                                 }
                                 Reservoir Rn = pathReservoirs[yy * w + xx];
-
                                 if (scene.options.shiftMapping == ShiftMappingType::RandomReplay)
                                 {
                                     // ----------------------------Random replay-------------------------------
@@ -1636,7 +1644,7 @@ Image3 do_restir_pt(const Scene& scene)
                                     Spectrum throughput = make_zero_spectrum();
                                     Spectrum L = make_zero_spectrum();
 
-                                    if (restir_reeval_lightPathTree(context, cameraPath))
+                                    if (restir_reeval_lightPathTree(scene, cameraPath))
                                     {
                                         L = restir_select_pathtree(cameraPath, &throughput, scene, scene.options.max_depth, false);
                                         // L = restir_eval_lightPath_no_nee(context, cameraPath, &throughput, scene.options.max_depth);
@@ -1711,10 +1719,115 @@ Image3 do_restir_pt(const Scene& scene)
                                         countShift++;
                                     }
                                 }
+                                else if (scene.options.shiftMapping == ShiftMappingType::Hybrid)
+                                {
+                                    // First, run half vector copy pass
+                                    ReplayableSampler sampler = Rn.pathTree.Sampler;
+                                    if (dot(Rn.pathTree.Vertices[1].Vertex.shading_frame.n, R.pathTree.Vertices[1].Vertex.shading_frame.n) < 0.98)
+                                    {
+                                        continue;
+                                    }
+
+                                    LightPathTree offsetPathTree = restir_gen_camera_nee_pathtree(scene, x, y, w, h, sampler, scene.options.max_depth, true, &Rn.pathTree);
+                                    if (offsetPathTree.Vertices.size() < 3)
+                                    {
+                                        continue;
+                                    }
+
+
+                                    Real J = 1;
+                                    // Second, select the first pair of vertices that are both diffuse
+                                    for (int i = 1; i < std::min(offsetPathTree.Vertices.size(), Rn.pathTree.Vertices.size()) - 1; i++)
+                                    {
+                                        const PathVertex& prev = offsetPathTree.Vertices[i - 1].Vertex;
+                                        const PathVertex& cur = offsetPathTree.Vertices[i].Vertex;
+                                        const PathVertex& nxt = offsetPathTree.Vertices[i + 1].Vertex;
+
+                                        if (cur.componentType == ComponentType::Diffuse 
+                                            && nxt.componentType != ComponentType::Specular 
+                                            && Rn.pathTree.Vertices[i+1].Vertex.componentType != ComponentType::Specular)
+                                        {
+                                            const PathVertex& xi = Rn.pathTree.Vertices[i].Vertex;
+                                            const PathVertex& xi1 = Rn.pathTree.Vertices[i + 1].Vertex;
+                                            const PathVertex& yi = offsetPathTree.Vertices[i].Vertex;
+
+                                            Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
+                                            Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
+
+                                            if (length(xi1.geometric_normal) > 0)
+                                            {
+                                                J *= A * B;
+                                            }
+
+
+                                            for (int s = i + 1; s < Rn.pathTree.Vertices.size(); s++)
+                                            {
+                                                if (s >= offsetPathTree.Vertices.size())
+                                                {
+                                                    offsetPathTree.Vertices.push_back(Rn.pathTree.Vertices[s]);
+                                                }
+                                                else
+                                                {
+                                                    offsetPathTree.Vertices[s] = Rn.pathTree.Vertices[s];
+                                                }
+                                            }
+
+                                            while (offsetPathTree.Vertices.size() > Rn.pathTree.Vertices.size())
+                                            {
+                                                offsetPathTree.Vertices.pop_back();
+                                            }
+                                            break;
+                                        }
+
+                                        const PathVertex& prev2 = Rn.pathTree.Vertices[i - 1].Vertex;
+                                        const PathVertex& cur2 = Rn.pathTree.Vertices[i].Vertex;
+                                        const PathVertex& nxt2 = Rn.pathTree.Vertices[i + 1].Vertex;
+
+                                        Vector3 wout = normalize(nxt.position - cur.position);
+                                        Vector3 Hy = normalize(prev.position - cur.position) + wout;
+                                        Hy = normalize(Hy);
+
+                                        Vector3 wout2 = normalize(nxt2.position - cur2.position);
+                                        Vector3 Hx = normalize(prev2.position - cur2.position) + wout2;
+                                        Hx = normalize(Hx);
+
+                                        J *= dot(Hy, wout) / dot(Hx, wout2);
+                                    }
+
+
+                                    Spectrum throughput = make_zero_spectrum();
+                                    Spectrum L = make_zero_spectrum();
+
+                                    if (restir_reeval_lightPathTree(scene, offsetPathTree))
+                                    {
+                                        L = restir_select_pathtree(offsetPathTree, &throughput, scene, scene.options.max_depth, false);
+                                        // L = restir_eval_lightPath_no_nee(context, cameraPath, &throughput, scene.options.max_depth);
+                                    }
+                                    Spectrum oldL = Rn.pathTree.P_hat;
+                                    if (isfinite(L) && !isnan(L))
+                                    {
+                                        Rn.pathTree = offsetPathTree;
+                                        Rn.pathTree.L = L;
+                                        Rn.pathTree.P_hat = throughput;
+
+                                        // R.update(luminance(throughput) / J * Rn.W * Rn.M, Rn.path, next_pcg32_real<Real>(rng));
+                                        R.combine(luminance(throughput) / J, Rn, next_pcg32_real<Real>(rng));
+                                        neighbors.push_back(pathReservoirs[yy * w + xx]);
+                                        {
+                                            std::lock_guard<std::mutex> lock(img_mutex);
+                                            Real d = (luminance(throughput - oldL));
+                                            MSE += d * d;
+                                            countShift++;
+                                        }
+
+                                    }
+                                }
                             }
                             
                         }
-                        Real Z = 0;
+
+
+
                         if (scene.options.shiftMapping == ShiftMappingType::RandomReplay)
                         {
                             for (const auto& Rn : neighbors)
@@ -1801,7 +1914,7 @@ Image3 do_restir_pt(const Scene& scene)
                                 {
                                     mainPath.Vertices[s] = Rn.pathTree.Vertices[s];
                                 }
-                                if (restir_reeval_lightPathTree(context, mainPath))
+                                if (restir_reeval_lightPathTree(scene, mainPath))
                                 {
                                     //R.M += Rn.M;
                                     Spectrum throughput = make_zero_spectrum();
@@ -1834,6 +1947,67 @@ Image3 do_restir_pt(const Scene& scene)
                                 // restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
                                 Spectrum throughput;
                                 Spectrum L = restir_select_pathtree(tree, &throughput, scene, scene.options.max_depth);
+                                if (luminance(throughput) > 0)
+                                {
+                                    Z += Rn.M;
+                                }
+                                else
+                                {
+                                    if (luminance(Rn.pathTree.L) > 0)
+                                    {
+                                        printf("");
+                                    }
+                                }
+                            }
+                        }
+                        else if (scene.options.shiftMapping == ShiftMappingType::Hybrid)
+                        {
+                            for (const auto& Rn : neighbors)
+                            {
+                                ReplayableSampler sampler = R.pathTree.Sampler;
+                                LightPathTree offsetPathTree = restir_gen_camera_nee_pathtree(scene, Rn.x, Rn.y, w, h, sampler, scene.options.max_depth, true, &R.pathTree);
+                                if (offsetPathTree.Vertices.size() <= 2)
+                                {
+                                    continue;
+                                }
+
+                                Real J = 1;
+                                // Second, select the first pair of vertices that are both diffuse
+                                for (int i = 1; i < std::min(offsetPathTree.Vertices.size(), R.pathTree.Vertices.size()) - 1; i++)
+                                {
+                                    const PathVertex& prev = offsetPathTree.Vertices[i - 1].Vertex;
+                                    const PathVertex& cur = offsetPathTree.Vertices[i].Vertex;
+                                    const PathVertex& nxt = offsetPathTree.Vertices[i + 1].Vertex;
+
+                                    if (cur.componentType == ComponentType::Diffuse
+                                        && nxt.componentType != ComponentType::Specular
+                                        && R.pathTree.Vertices[i + 1].Vertex.componentType != ComponentType::Specular)
+                                    {
+
+                                        for (int s = i + 1; s < R.pathTree.Vertices.size(); s++)
+                                        {
+                                            if (s >= offsetPathTree.Vertices.size())
+                                            {
+                                                offsetPathTree.Vertices.push_back(R.pathTree.Vertices[s]);
+                                            }
+                                            else
+                                            {
+                                                offsetPathTree.Vertices[s] = R.pathTree.Vertices[s];
+                                            }
+                                        }
+
+                                        while (offsetPathTree.Vertices.size() > R.pathTree.Vertices.size())
+                                        {
+                                            offsetPathTree.Vertices.pop_back();
+                                        }
+                                        break;
+                                    }
+                                }
+
+
+                                // restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
+                                Spectrum throughput;
+                                Spectrum L = restir_select_pathtree(offsetPathTree, &throughput, scene, scene.options.max_depth);
                                 if (luminance(throughput) > 0)
                                 {
                                     Z += Rn.M;

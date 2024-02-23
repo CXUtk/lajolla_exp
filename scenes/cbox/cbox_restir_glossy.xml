@@ -4,7 +4,7 @@
 	<integrator type="restirpt">
 		<integer name="maxDepth" value="4"/>
 		<integer name="iteration" value="1"/>
-		<integer name="shiftmapping" value="random_replay"/>
+		<integer name="shiftmapping" value="hybrid"/>
 	</integrator>
 
 
