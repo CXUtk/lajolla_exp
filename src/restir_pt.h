@@ -1588,7 +1588,7 @@ Image3 do_restir_pt(const Scene& scene)
                                 {
 
                                     // ------------------------Vertex Reconnect-----------------------------------
-                                    ReplayableSampler sampler = R.pathTree.Sampler;
+                                    ReplayableSampler sampler = Rn.pathTree.Sampler;
                                     sampler.replay();
                                     Vector2 screen_pos((x + sampler.next_double()) / w,
                                         (y + sampler.next_double()) / h);
@@ -1599,18 +1599,18 @@ Image3 do_restir_pt(const Scene& scene)
                                         RayDifferential{ Real(0), Real(0) },
                                         scene.camera.medium_id,
                                         0 };
-                                    LightPathTree cameraPath = Rn.pathTree;
+                                    LightPathTree cameraPath = R.pathTree;
 
-                                    if (cameraPath.Vertices[1].Vertex.shape_id != R.pathTree.Vertices[1].Vertex.shape_id)
+                                    if (Rn.pathTree.Vertices[1].Vertex.shape_id != R.pathTree.Vertices[1].Vertex.shape_id)
                                     {
                                         continue;
                                     }
-                                    if (dot(cameraPath.Vertices[1].Vertex.shading_frame.n, R.pathTree.Vertices[1].Vertex.shading_frame.n) < 0.98)
+                                    if (dot(Rn.pathTree.Vertices[1].Vertex.shading_frame.n, R.pathTree.Vertices[1].Vertex.shading_frame.n) < 0.98)
                                     {
                                         continue;
                                     }
 
-                                    if (cameraPath.Vertices.size() <= 2)
+                                    if (Rn.pathTree.Vertices.size() <= 2)
                                     {
                                         continue;
                                     }
@@ -1618,9 +1618,9 @@ Image3 do_restir_pt(const Scene& scene)
 
                                     Real J = 1;
 
-                                    PathVertex xi = R.pathTree.Vertices[1].Vertex;
-                                    PathVertex xi1 = cameraPath.Vertices[2].Vertex;
-                                    PathVertex yi = cameraPath.Vertices[1].Vertex;
+                                    PathVertex xi = Rn.pathTree.Vertices[1].Vertex;
+                                    PathVertex xi1 = Rn.pathTree.Vertices[2].Vertex;
+                                    PathVertex yi = R.pathTree.Vertices[1].Vertex;
 
                                     Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
                                     Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
@@ -1636,10 +1636,23 @@ Image3 do_restir_pt(const Scene& scene)
                                     }
                                     //cameraPath.Vertices[1].pdfFwd = 1;
 
-                                    for (int s = 0; s < std::min(2ULL, std::min(cameraPath.Vertices.size(), R.pathTree.Vertices.size())); s++)
+                                    for (int s = 2; s < Rn.pathTree.Vertices.size(); s++)
                                     {
-                                        cameraPath.Vertices[s] = R.pathTree.Vertices[s];
+                                        if (s >= cameraPath.Vertices.size())
+                                        {
+                                            cameraPath.Vertices.push_back(Rn.pathTree.Vertices[s]);
+                                        }
+                                        else
+                                        {
+                                            cameraPath.Vertices[s] = Rn.pathTree.Vertices[s];
+                                        }
                                     }
+
+                                    while (cameraPath.Vertices.size() > Rn.pathTree.Vertices.size())
+                                    {
+                                        cameraPath.Vertices.pop_back();
+                                    }
+
 
                                     Spectrum throughput = make_zero_spectrum();
                                     Spectrum L = make_zero_spectrum();
@@ -1657,7 +1670,7 @@ Image3 do_restir_pt(const Scene& scene)
                                         Rn.pathTree.P_hat = throughput;
 
                                         // R.update(luminance(throughput) / J * Rn.W * Rn.M, Rn.path, next_pcg32_real<Real>(rng));
-                                        R.combine(luminance(throughput) / J, Rn, next_pcg32_real<Real>(rng));
+                                        R.combine(luminance(throughput) * J, Rn, next_pcg32_real<Real>(rng));
                                         neighbors.push_back(pathReservoirs[yy * w + xx]);
                                         {
                                             std::lock_guard<std::mutex> lock(img_mutex);
@@ -1723,6 +1736,7 @@ Image3 do_restir_pt(const Scene& scene)
                                 {
                                     // First, run half vector copy pass
                                     ReplayableSampler sampler = Rn.pathTree.Sampler;
+                                    // Ignore points that are not in the same plane
                                     if (dot(Rn.pathTree.Vertices[1].Vertex.shading_frame.n, R.pathTree.Vertices[1].Vertex.shading_frame.n) < 0.98)
                                     {
                                         continue;
@@ -1744,39 +1758,46 @@ Image3 do_restir_pt(const Scene& scene)
                                         const PathVertex& nxt = offsetPathTree.Vertices[i + 1].Vertex;
 
                                         if (cur.componentType == ComponentType::Diffuse 
-                                            && nxt.componentType != ComponentType::Specular 
+                                            && Rn.pathTree.Vertices[i].Vertex.componentType != ComponentType::Specular
                                             && Rn.pathTree.Vertices[i+1].Vertex.componentType != ComponentType::Specular)
                                         {
                                             const PathVertex& xi = Rn.pathTree.Vertices[i].Vertex;
                                             const PathVertex& xi1 = Rn.pathTree.Vertices[i + 1].Vertex;
-                                            const PathVertex& yi = offsetPathTree.Vertices[i].Vertex;
+                                            const PathVertex& yi = R.pathTree.Vertices[i].Vertex;
 
-                                            Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
-                                            Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
-
-                                            if (length(xi1.geometric_normal) > 0)
+                                            if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
                                             {
-                                                J *= A * B;
+                                                
                                             }
-
-
-                                            for (int s = i + 1; s < Rn.pathTree.Vertices.size(); s++)
+                                            else
                                             {
-                                                if (s >= offsetPathTree.Vertices.size())
+                                                Real A = std::abs(dot(xi1.geometric_normal, normalize(xi1.position - yi.position)) / dot(xi1.geometric_normal, normalize(xi1.position - xi.position)));
+                                                Real B = length_squared(xi1.position - xi.position) / length_squared(xi1.position - yi.position);
+
+                                                if (length(xi1.geometric_normal) > 0)
                                                 {
-                                                    offsetPathTree.Vertices.push_back(Rn.pathTree.Vertices[s]);
+                                                    J /= A * B;
                                                 }
-                                                else
-                                                {
-                                                    offsetPathTree.Vertices[s] = Rn.pathTree.Vertices[s];
-                                                }
-                                            }
 
-                                            while (offsetPathTree.Vertices.size() > Rn.pathTree.Vertices.size())
-                                            {
-                                                offsetPathTree.Vertices.pop_back();
+
+                                                for (int s = i + 1; s < Rn.pathTree.Vertices.size(); s++)
+                                                {
+                                                    if (s >= offsetPathTree.Vertices.size())
+                                                    {
+                                                        offsetPathTree.Vertices.push_back(Rn.pathTree.Vertices[s]);
+                                                    }
+                                                    else
+                                                    {
+                                                        offsetPathTree.Vertices[s] = Rn.pathTree.Vertices[s];
+                                                    }
+                                                }
+
+                                                while (offsetPathTree.Vertices.size() > Rn.pathTree.Vertices.size())
+                                                {
+                                                    offsetPathTree.Vertices.pop_back();
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
 
                                         const PathVertex& prev2 = Rn.pathTree.Vertices[i - 1].Vertex;
@@ -1898,7 +1919,7 @@ Image3 do_restir_pt(const Scene& scene)
                         {
                             for (auto Rn : neighbors)
                             {
-                                ReplayableSampler sampler = Rn.pathTree.Sampler;
+                                ReplayableSampler sampler = R.pathTree.Sampler;
                                 sampler.replay();
                                 Vector2 screen_pos((x + sampler.next_double()) / w,
                                     (y + sampler.next_double()) / h);
@@ -1909,10 +1930,22 @@ Image3 do_restir_pt(const Scene& scene)
                                     RayDifferential{ Real(0), Real(0) },
                                     scene.camera.medium_id,
                                     0 };
-                                LightPathTree mainPath = R.pathTree;
-                                for (int s = 0; s < std::min(2ULL, std::min(mainPath.Vertices.size(), Rn.pathTree.Vertices.size())); s++)
+                                LightPathTree mainPath = Rn.pathTree;
+                                for (int s = 2; s < R.pathTree.Vertices.size(); s++)
                                 {
-                                    mainPath.Vertices[s] = Rn.pathTree.Vertices[s];
+                                    if (s >= mainPath.Vertices.size())
+                                    {
+                                        mainPath.Vertices.push_back(R.pathTree.Vertices[s]);
+                                    }
+                                    else
+                                    {
+                                        mainPath.Vertices[s] = R.pathTree.Vertices[s];
+                                    }
+                                }
+
+                                while (mainPath.Vertices.size() > R.pathTree.Vertices.size())
+                                {
+                                    mainPath.Vertices.pop_back();
                                 }
                                 if (restir_reeval_lightPathTree(scene, mainPath))
                                 {
@@ -1980,43 +2013,56 @@ Image3 do_restir_pt(const Scene& scene)
                                     const PathVertex& nxt = offsetPathTree.Vertices[i + 1].Vertex;
 
                                     if (cur.componentType == ComponentType::Diffuse
-                                        && nxt.componentType != ComponentType::Specular
+                                        && R.pathTree.Vertices[i].Vertex.componentType != ComponentType::Specular
                                         && R.pathTree.Vertices[i + 1].Vertex.componentType != ComponentType::Specular)
                                     {
-
-                                        for (int s = i + 1; s < R.pathTree.Vertices.size(); s++)
+                                        const PathVertex& xi = R.pathTree.Vertices[i].Vertex;
+                                        const PathVertex& xi1 = R.pathTree.Vertices[i + 1].Vertex;
+                                        const PathVertex& yi = Rn.pathTree.Vertices[i].Vertex;
+                                        if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
                                         {
-                                            if (s >= offsetPathTree.Vertices.size())
-                                            {
-                                                offsetPathTree.Vertices.push_back(R.pathTree.Vertices[s]);
-                                            }
-                                            else
-                                            {
-                                                offsetPathTree.Vertices[s] = R.pathTree.Vertices[s];
-                                            }
-                                        }
 
-                                        while (offsetPathTree.Vertices.size() > R.pathTree.Vertices.size())
-                                        {
-                                            offsetPathTree.Vertices.pop_back();
                                         }
-                                        break;
+                                        else
+                                        {
+                                            for (int s = i + 1; s < R.pathTree.Vertices.size(); s++)
+                                            {
+                                                if (s >= offsetPathTree.Vertices.size())
+                                                {
+                                                    offsetPathTree.Vertices.push_back(R.pathTree.Vertices[s]);
+                                                }
+                                                else
+                                                {
+                                                    offsetPathTree.Vertices[s] = R.pathTree.Vertices[s];
+                                                }
+                                            }
+
+                                            while (offsetPathTree.Vertices.size() > R.pathTree.Vertices.size())
+                                            {
+                                                offsetPathTree.Vertices.pop_back();
+                                            }
+                                            break;
+                                        }
                                     }
                                 }
 
 
                                 // restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
-                                Spectrum throughput;
-                                Spectrum L = restir_select_pathtree(offsetPathTree, &throughput, scene, scene.options.max_depth);
-                                if (luminance(throughput) > 0)
+
+                                if (restir_reeval_lightPathTree(scene, offsetPathTree))
                                 {
-                                    Z += Rn.M;
-                                }
-                                else
-                                {
-                                    if (luminance(Rn.pathTree.L) > 0)
+                                    Spectrum throughput;
+                                    Spectrum L = restir_select_pathtree(offsetPathTree, &throughput, scene, scene.options.max_depth);
+                                    if (luminance(throughput) > 0)
                                     {
-                                        printf("");
+                                        Z += Rn.M;
+                                    }
+                                    else
+                                    {
+                                        if (luminance(Rn.pathTree.L) > 0)
+                                        {
+                                            printf("");
+                                        }
                                     }
                                 }
                             }
