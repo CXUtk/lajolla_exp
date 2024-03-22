@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <scene version="0.4.0">
-	<integrator type="restirpt">
+	<integrator type="gdpt">
 		<integer name="maxDepth" value="4"/>
 		<integer name="iteration" value="1"/>
-		<integer name="shiftmapping" value="hybrid"/>
+		<integer name="shiftmapping" value="random_replay"/>
 	</integrator>
 
 

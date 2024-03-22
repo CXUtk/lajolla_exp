@@ -1,55 +1,13 @@
 #pragma once
 #include "path_tracing_helper.h"
 #include "sampler.h"
+#include "lightpaths.h"
 #include <fstream>
 
 #define RAW_PT_OUTPUT 0
 #define DUMP_PT_PATHS 0
 
-enum class SampleMethod
-{
-    BSDF,
-    NEE
-};
-/// An "LightPath" represents a list of vertices of a light path
-/// We store the information we need for computing any sort of path contribution & sampling density.
-struct LightPath
-{
-    Vector2                     ScreenPos;
-    ReplayableSampler           Sampler;
-    std::vector<PathVertex>     Vertices;
-    Spectrum                    L;
-    Spectrum                    P_hat;
-    SampleMethod                SampleMethod = SampleMethod::BSDF;
-    Real                        Pdf1 = 0;
-    Real                        Pdf2 = 0;
-};
 
-
-struct LightPathTreeNode
-{
-    PathVertex  Vertex;
-    PathVertex  NeeVertex;
-    Spectrum    L_Nee;
-    Real        Pdf_Nee = 0.0;
-};
-
-/// An "LightPathTree" represents a tree of vertices of a light path with NEE
-/// We store the information we need for computing any sort of path contribution & sampling density.
-struct LightPathTree
-{
-    ReplayableSampler                   Sampler;
-    std::vector<LightPathTreeNode>      Vertices;
-    Spectrum                            L;
-    Spectrum                            P_hat;
-};
-
-
-struct LightPathSerializationInfo
-{
-    std::vector<Real>   Sequence;
-    Spectrum            Throughput;
-};
 
 constexpr int RAND_SEQ_SIZE = 10;
 
@@ -176,27 +134,7 @@ bool restir_sample_vol_scattering_homogenized(int medium_id,
     return false;
 }
 
-Spectrum restir_path_sample_phase_function(int medium_id, const Ray& ray, const Scene& scene,
-    ReplayableSampler& sampler, Vector3* wout, Real* pdf, Real* pdfRev)
-{
-    const Medium& medium = scene.media[medium_id];
-    Spectrum sigma_s = get_sigma_s(medium, ray.org);
-    PhaseFunction phaseFunction = get_phase_function(medium);
 
-    Vector2 phase_rnd_param = Vector2(sampler.next_double(), sampler.next_double());
-
-    Vector3 win = -ray.dir;
-    std::optional<Vector3> next_dir = sample_phase_function(phaseFunction, win, phase_rnd_param);
-    if (next_dir)
-    {
-        *wout = *next_dir;
-        *pdf = pdf_sample_phase(phaseFunction, win, *next_dir);
-        *pdfRev = pdf_sample_phase(phaseFunction, *next_dir, win);
-        return eval(phaseFunction, win, *next_dir);
-    }
-    *pdf = 0;
-    return make_zero_spectrum();
-}
 
 
 void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay, const RayDifferential& rayDiff,
@@ -257,7 +195,7 @@ void restir_random_walk(LightPath& path, const Scene& scene, const Ray& initRay,
                 Real pdf_phase;
                 Real pdf_rev;
 
-                Spectrum f = restir_path_sample_phase_function(currentMedium, currentRay, scene, sampler, &wout, &pdf_phase, &pdf_rev);
+                Spectrum f = path_sample_phase_function(currentMedium, currentRay, scene, sampler, &wout, &pdf_phase, &pdf_rev);
                 if (luminance(f) != 0 && pdf_phase != 0)
                 {
                     pdfFwd = pdf_phase;
@@ -1534,13 +1472,13 @@ Image3 do_restir_pt(const Scene& scene)
                                         scene.camera.medium_id,
                                         0 };
                                     LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);*/
-                                    if (tree.Vertices.size() < 3)
-                                    {
-                                        continue;
-                                    }
+                                    //if (tree.Vertices.size() < scene.options.max_depth)
+                                    //{
+                                    //    continue;
+                                    //}
                                     Real J = 1;
 
-                                    //for (int j = 2; j < std::min(R.pathTree.Vertices.size(), tree.Vertices.size()) - 1; j++)
+                                    //for (int j = 1; j < std::min(R.pathTree.Vertices.size(), tree.Vertices.size()) - 1; j++)
                                     //{
                                     //    Vector3 win = normalize(R.pathTree.Vertices[j - 1].Vertex.position - R.pathTree.Vertices[j].Vertex.position);
                                     //    Vector3 wout = normalize(R.pathTree.Vertices[j + 1].Vertex.position - R.pathTree.Vertices[j].Vertex.position);
@@ -1610,7 +1548,7 @@ Image3 do_restir_pt(const Scene& scene)
                                         continue;
                                     }
 
-                                    if (Rn.pathTree.Vertices.size() <= 2)
+                                    if (Rn.pathTree.Vertices.size() < scene.options.max_depth)
                                     {
                                         continue;
                                     }
@@ -1632,7 +1570,7 @@ Image3 do_restir_pt(const Scene& scene)
 
                                     if (length(xi1.geometric_normal) > 0)
                                     {
-                                        J = A * B;
+                                        J /= A * B;
                                     }
                                     //cameraPath.Vertices[1].pdfFwd = 1;
 
@@ -1670,7 +1608,7 @@ Image3 do_restir_pt(const Scene& scene)
                                         Rn.pathTree.P_hat = throughput;
 
                                         // R.update(luminance(throughput) / J * Rn.W * Rn.M, Rn.path, next_pcg32_real<Real>(rng));
-                                        R.combine(luminance(throughput) * J, Rn, next_pcg32_real<Real>(rng));
+                                        R.combine(luminance(throughput) / J, Rn, next_pcg32_real<Real>(rng));
                                         neighbors.push_back(pathReservoirs[yy * w + xx]);
                                         {
                                             std::lock_guard<std::mutex> lock(img_mutex);
@@ -1690,7 +1628,7 @@ Image3 do_restir_pt(const Scene& scene)
                                     }
 
                                     LightPathTree tree = restir_gen_camera_nee_pathtree(scene, x, y, w, h, sampler, scene.options.max_depth, true, &Rn.pathTree);
-                                    if (tree.Vertices.size() < 3)
+                                    if (tree.Vertices.size() < scene.options.max_depth)
                                     {
                                         continue;
                                     }
@@ -1743,7 +1681,7 @@ Image3 do_restir_pt(const Scene& scene)
                                     }
 
                                     LightPathTree offsetPathTree = restir_gen_camera_nee_pathtree(scene, x, y, w, h, sampler, scene.options.max_depth, true, &Rn.pathTree);
-                                    if (offsetPathTree.Vertices.size() < 3)
+                                    if (offsetPathTree.Vertices.size() < scene.options.max_depth)
                                     {
                                         continue;
                                     }
@@ -1763,7 +1701,7 @@ Image3 do_restir_pt(const Scene& scene)
                                         {
                                             const PathVertex& xi = Rn.pathTree.Vertices[i].Vertex;
                                             const PathVertex& xi1 = Rn.pathTree.Vertices[i + 1].Vertex;
-                                            const PathVertex& yi = R.pathTree.Vertices[i].Vertex;
+                                            const PathVertex& yi = offsetPathTree.Vertices[i].Vertex;
 
                                             if (length(xi1.position - xi.position) < 10 || length(xi1.position - yi.position) < 10)
                                             {
@@ -1863,11 +1801,11 @@ Image3 do_restir_pt(const Scene& scene)
                                      scene.camera.medium_id,
                                      0 };
                                  LightPath cameraPath = restir_gen_camera_subpath(scene, screen_pos, sampler, scene.options.max_depth);*/
-                                if (tree.Vertices.size() <= 2)
-                                {
-                                    continue;
-                                }
-                                
+                                //if (tree.Vertices.size() < scene.options.max_depth)
+                                //{
+                                //    continue;
+                                //}
+                                //
                                 // restir_eval_nee_pathtree(tree, scene, false, scene.options.max_depth);
                                 Spectrum throughput;
                                 Spectrum L = restir_select_pathtree(tree, &throughput, scene, scene.options.max_depth);
@@ -1972,7 +1910,7 @@ Image3 do_restir_pt(const Scene& scene)
                             {
                                 ReplayableSampler sampler = R.pathTree.Sampler;
                                 LightPathTree tree = restir_gen_camera_nee_pathtree(scene, Rn.x, Rn.y, w, h, sampler, scene.options.max_depth, true, &R.pathTree);
-                                if (tree.Vertices.size() <= 2)
+                                if (tree.Vertices.size() < scene.options.max_depth)
                                 {
                                     continue;
                                 }
@@ -1999,7 +1937,7 @@ Image3 do_restir_pt(const Scene& scene)
                             {
                                 ReplayableSampler sampler = R.pathTree.Sampler;
                                 LightPathTree offsetPathTree = restir_gen_camera_nee_pathtree(scene, Rn.x, Rn.y, w, h, sampler, scene.options.max_depth, true, &R.pathTree);
-                                if (offsetPathTree.Vertices.size() <= 2)
+                                if (offsetPathTree.Vertices.size() < scene.options.max_depth)
                                 {
                                     continue;
                                 }

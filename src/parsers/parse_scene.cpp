@@ -599,6 +599,30 @@ RenderOptions parse_integrator(pugi::xml_node node,
                 options.max_depth = parse_integer(
                     child.attribute("value").value(), default_map);
             }
+            else if (name == "shiftmapping")
+            {
+                std::string shift = child.attribute("value").value();
+                if (shift == "vertex_reconnect")
+                {
+                    options.shiftMapping = ShiftMappingType::VertexReconnect;
+                }
+                else if (shift == "random_replay")
+                {
+                    options.shiftMapping = ShiftMappingType::RandomReplay;
+                }
+                else if (shift == "half_vector")
+                {
+                    options.shiftMapping = ShiftMappingType::HalfVector;
+                }
+                else if (shift == "hybrid")
+                {
+                    options.shiftMapping = ShiftMappingType::Hybrid;
+                }
+                else
+                {
+                    Error(std::string("Unsupported shift mapping: ") + shift);
+                }
+            }
         }
     }
     else if (type == "restirpt")

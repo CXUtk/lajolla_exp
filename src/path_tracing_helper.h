@@ -108,13 +108,14 @@ inline PathVertex CreateSurface(const PathVertex& vertex, const Spectrum& beta, 
     return v;
 }
 
-inline PathVertex CreateSurface(const PathVertex& vertex, const Spectrum& beta, const Spectrum& throughput, Real pdf, const PathVertex& prev, int medium)
+inline PathVertex CreateSurface(const PathVertex& vertex, const Spectrum& beta, const Spectrum& throughput, Real pdf, const PathVertex& prev, int medium, Real pdfSample = 1)
 {
     PathVertex v = vertex;
     v.vertexType = VertexType::Surface;
     v.beta = beta;
     v.throughput = throughput;
     v.medium_id = medium;
+    v.pdfSampleNext = pdfSample;
 
     v.pdfFwd = convert_pdf(pdf, prev, vertex);
     return v;

@@ -1,5 +1,7 @@
-# lajolla
-UCSD CSE 272 renderer
+# Path Mapping Experiments with lajolla
+lajolla: UCSD CSE 272 renderer, forked from [Here](https://github.com/BachiLi/lajolla_public).
+
+Path Mapping: We are trying to find an optimal mapping with light paths such that it could produce optimal results for path reuse applications like ReSTIR and GDPT. 
 
 # Build
 All the dependencies are included. Use CMake to build.

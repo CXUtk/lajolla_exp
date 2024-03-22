@@ -18,7 +18,7 @@ enum class TransportDirection
     TO_VIEW
 };
 
-enum class VertexType { Camera, Light, Surface, Medium };
+enum class VertexType { None, Camera, Light, Surface, Medium };
 
 struct Bound3
 {
@@ -57,7 +57,7 @@ struct Bound3
 /// An "PathVertex" represents a vertex of a light path.
 /// We store the information we need for computing any sort of path contribution & sampling density.
 struct PathVertex {
-    VertexType vertexType;
+    VertexType vertexType = VertexType::None;
     Vector3 position{};
     Vector3 geometric_normal{}; // always face at the same direction at shading_frame.n
     Frame shading_frame{};
@@ -82,6 +82,7 @@ struct PathVertex {
     int light_id = -1;
     Spectrum beta;
     Spectrum throughput;
+    Real pdfSampleNext = 1;
     Real pdfFwd = 0, pdfRev = 0;
     ComponentType componentType = ComponentType::None;
 };
