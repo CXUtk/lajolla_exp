@@ -1,0 +1,18 @@
+{
+    "learning_rate": 1e-2,
+    "sequence_size": 30,
+    "epochs": 500,
+    "no_layers": 1,
+    "hidden_size": 200,
+    "dropout": 0.3,
+    "model_type": "lstm",
+    "optimizer_type": "adam",
+    "save_epoch": 20,
+    "temperature": 0.8,
+    "max_generation_length": 1000,
+    "generated_song_file_path": "./song_generated.txt",
+    "show_heatmap": true,
+    "loss_plot_file_name": "baseline_loss_plot",
+    "evaluate_model_only": true,
+    "model_path": "./checkpoint/ckpt_mdl_lstm_ep_101_hsize_200_dout_0.1.t100"
+}
